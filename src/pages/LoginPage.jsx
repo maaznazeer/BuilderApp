@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
     import { Checkbox } from '@/components/ui/checkbox';
     import { Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
     import FacebookIcon from '@/components/icons/FacebookIcon';
-    import AppleIcon from '@/components/icons/AppleIcon';
+    import GoogleIcon from '@/components/icons/GoogleIcon';
     import { useTranslation } from 'react-i18next';
     import AuthLayout from '@/components/auth/AuthLayout.jsx';
     
@@ -80,10 +80,8 @@ import React, { useState, useEffect } from 'react';
             <div className="relative flex justify-center text-sm"><span className="bg-white px-2 text-gray-500">{t('login.or_continue_with')}</span></div>
           </div>
           
-          <div className="grid grid-cols-3 gap-3">
-            <Button variant="outline" className="py-6" onClick={() => handleOAuthLogin('google')} disabled={isLoading}><Chrome className="h-5 w-5" /></Button>
-            <Button variant="outline" className="py-6" onClick={() => handleOAuthLogin('facebook')} disabled={isLoading}><FacebookIcon className="h-5 w-5" /></Button>
-            <Button variant="outline" className="py-6" onClick={() => handleOAuthLogin('apple')} disabled={isLoading}><AppleIcon className="h-5 w-5" /></Button>
+          <div className="w-full">
+            <Button variant="outline" className="w-full py-6" onClick={() => handleOAuthLogin('google')} disabled={isLoading}>Sign in with Google <GoogleIcon className="h-5 w-5 ml-5" /></Button>
           </div>
     
            <p className="pt-4 text-center text-sm text-gray-500">

@@ -67,6 +67,11 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
             throw new Error('Could not retrieve user profile after ensuring it exists.');
           }
           
+          console.log('=== PROFILE DEBUG ===');
+          console.log('Raw profile from ensure_profile:', ensuredProfileResult);
+          console.log('User metadata:', currentSession.user.user_metadata);
+          console.log('Pending role in localStorage:', localStorage.getItem('pendingOAuthRole'));
+          
           const fullProfile = {
             id: ensuredProfileResult.profile_id,
             email: ensuredProfileResult.profile_email,
@@ -76,14 +81,21 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
             plan_tier: ensuredProfileResult.profile_plan_tier,
             preferred_language: ensuredProfileResult.preferred_language
           };
+          
+          console.log('Profile before role application:', fullProfile);
+
+          // Call sync_profile_email BEFORE applying role to prevent it from overriding the role
+          await supabase.rpc('sync_profile_email');
 
           // If we came from pre-auth role selection for OAuth, apply it once here
           const pendingRole = localStorage.getItem('pendingOAuthRole');
           const pendingSource = localStorage.getItem('pendingOAuthSource');
           if (pendingRole && pendingSource === 'signup') {
             const enumMap = { homebuilder: 'Homebuilder', homeowner: 'Homeowner', subcontractor: 'Subcontractor' };
-            const appRoleEnum = enumMap[String(pendingRole)] || 'Homeowner';
+            const key = String(pendingRole).toLowerCase();
+            const appRoleEnum = enumMap[key] || 'Homeowner';
             try {
+              // Update both user metadata and profile table
               await supabase.auth.updateUser({ data: { app_role: appRoleEnum } });
               await supabase
                 .from('profiles')
@@ -91,10 +103,34 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
                 .eq('id', currentSession.user.id);
               fullProfile.app_role = appRoleEnum;
               fullProfile.role = 'member';
-            } catch {}
+              console.log('Applied OAuth role:', appRoleEnum);
+            } catch (error) {
+              console.error('Failed to apply OAuth role:', error);
+            }
             localStorage.removeItem('pendingOAuthRole');
             localStorage.removeItem('pendingOAuthSource');
+          } else {
+            // Check if the profile has a valid role, if not, try to get it from user metadata
+            if (!fullProfile.app_role || fullProfile.app_role === 'Homeowner' || fullProfile.app_role === 'member') {
+              const userRole = currentSession.user.user_metadata?.app_role;
+              if (userRole && userRole !== 'Homeowner' && userRole !== 'member') {
+                console.log('Found role in user metadata, applying:', userRole);
+                try {
+                  await supabase
+                    .from('profiles')
+                    .update({ app_role: userRole, role: 'member' })
+                    .eq('id', currentSession.user.id);
+                  fullProfile.app_role = userRole;
+                  fullProfile.role = 'member';
+                  console.log('Applied role from user metadata:', userRole);
+                } catch (error) {
+                  console.error('Failed to apply role from user metadata:', error);
+                }
+              }
+            }
           }
+          
+          console.log('Final profile after role handling:', fullProfile);
 
           const fullUser = { ...currentSession.user, ...fullProfile };
           setUser(fullUser);
@@ -131,7 +167,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
             setTrialStatus(trialData[0] || { is_active: false, days_left: 0 });
           }
 
-          await supabase.rpc('sync_profile_email');
 
         } catch (error) {
           console.error("Error during user initialization:", error);
@@ -151,19 +186,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
           const { data: { session: initialSession } } = await supabase.auth.getSession();
           if (initialSession) {
             await initializeUserSession(initialSession);
-            // If coming from signup OAuth and a role was chosen, apply it once
-            const pendingRole = localStorage.getItem('pendingOAuthRole');
-            const pendingSource = localStorage.getItem('pendingOAuthSource');
-            if (pendingRole && pendingSource === 'signup') {
-              try {
-                const enumMap = { homebuilder: 'Homebuilder', homeowner: 'Homeowner', subcontractor: 'Subcontractor' };
-                const appRoleEnum = enumMap[pendingRole] || 'Homeowner';
-                await supabase.auth.updateUser({ data: { app_role: appRoleEnum } });
-                await supabase.from('profiles').update({ app_role: appRoleEnum, role: 'member' }).eq('id', initialSession.user.id);
-              } catch {}
-              localStorage.removeItem('pendingOAuthRole');
-              localStorage.removeItem('pendingOAuthSource');
-            }
           } else {
             setLoading(false);
           }
@@ -178,18 +200,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
                 navigate('/login', { replace: true });
             } else if (session && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === "USER_UPDATED")) {
                 await initializeUserSession(session);
-                const pendingRole2 = localStorage.getItem('pendingOAuthRole');
-                const pendingSource2 = localStorage.getItem('pendingOAuthSource');
-                if (pendingRole2 && pendingSource2 === 'signup') {
-                  try {
-                    const enumMap = { homebuilder: 'Homebuilder', homeowner: 'Homeowner', subcontractor: 'Subcontractor' };
-                    const appRoleEnum = enumMap[pendingRole2] || 'Homeowner';
-                    await supabase.auth.updateUser({ data: { app_role: appRoleEnum } });
-                    await supabase.from('profiles').update({ app_role: appRoleEnum, role: 'member' }).eq('id', session.user.id);
-                  } catch {}
-                  localStorage.removeItem('pendingOAuthRole');
-                  localStorage.removeItem('pendingOAuthSource');
-                }
             }
           }
         );
