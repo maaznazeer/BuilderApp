@@ -1,0 +1,32 @@
+{
+  "navbar": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "solutions": "Solutions",
+    "toolkits": "Boîtes à outils",
+    "about": "À propos",
+    "pricing": "Tarifs",
+    "contact": "Contact",
+    "request_demo": "Demander une démo",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "user_permissions": "Permissions Utilisateur"
+  },
+  "footer": {
+    "quickLinks": "Liens Rapides",
+    "services": "Services",
+    "contactInfo": "Infos Contact",
+    "tagline": "Construire des rêves, un projet à la fois.",
+    "contactAddress": "123 Allée du Bâtisseur, Ville de la Construction, BC 12345",
+    "newsletterTitle": "Restez Informé",
+    "newsletterDescription": "Abonnez-vous à notre newsletter pour les dernières mises à jour et offres exclusives.",
+    "emailPlaceholder": "Votre adresse e-mail",
+    "subscribe": "S'abonner",
+    "copyright": "© 2025 DOMUSbuilder. Tous droits réservés."
+  },
+  "toast": {
+    "feature_not_implemented": "🚧 Cette fonctionnalité n'est pas encore implémentée – mais ne vous inquiétez pas ! Vous pouvez la demander dans votre prochaine requête ! 🚀"
+  }
+}

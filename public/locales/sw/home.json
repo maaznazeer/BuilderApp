@@ -1,0 +1,60 @@
+{
+  "hero": {
+    "title1": "Domus Builder Ni Programu Yako Yote-Katika-Moja Yenye Nguvu ya Usimamizi wa Ujenzi",
+    "title2": "Zana Nafuu na Rahisi Zaidi Inayorahisisha Usimamizi wa Ujenzi wa Nyumba Kutoka Popote",
+    "description": "Jipatie uwezo wa kufuatilia, kusimamia, na kushirikiana kwa ufanisi katika miradi ya ujenzi wa nyumba kutoka popote duniani kwa kutumia jukwaa letu kamili lililoundwa kwa ajili ya wataalam wa kigeni.",
+    "cta_trial": "Anza Jaribio la Bure",
+    "cta_learn": "Jifunze Zaidi",
+    "trial_info1": "Jaribio la Bure la Siku 30",
+    "trial_info2": "Hakuna Kadi ya Mkopo Inayohitajika",
+    "trial_info3": "Ghairi Wakati Wowote"
+  },
+  "builderTypes": {
+    "title": "Imeundwa kwa Kila Aina ya Mjenzi",
+    "description": "Iwe unajenga kutoka mwanzo, unafanya ukarabati, au una utaalam katika biashara maalum, jukwaa letu linakidhi mahitaji yako ya kipekee.",
+    "homeBuilders": "Wajenzi wa Nyumba",
+    "homeBuildersDesc": "Kwa wajenzi wa nyumba kuendesha miradi yao ya ujenzi kwa mafanikio sehemu moja.",
+    "renovation": "Ukarabati/Uboreshaji",
+    "renovationDesc": "Jukwaa moja la kusimamia miradi yote ya ukarabati - jikoni, bafu, nyongeza na uboreshaji wa nyumba nzima.",
+    "specialty": "Wataalam Maalum",
+    "specialtyDesc": "Wapauaji, watunza bustani, waweka mabwawa, wapaka rangi wanaweza kusimamia kila awamu ya miradi yao hapa hapa."
+  },
+  "operations": {
+    "title": "Uendeshaji Uliorahisishwa",
+    "description": "Zana kamili za kusimamia kila kipengele cha mradi wako wa ujenzi kwa usahihi na ufanisi.",
+    "dashboard": "Dashibodi ya Usimamizi wa Mradi",
+    "dashboardDesc": "Panga, fuatilia na kamilisha miradi kwa urahisi ukitumia dashibodi yetu kamili.",
+    "financial": "Ufuatiliaji wa Kifedha",
+    "financialDesc": "Boresha mtiririko wa fedha na ongeza faida kwa zana za hali ya juu za usimamizi wa kifedha.",
+    "communication": "Kitovu cha Mawasiliano",
+    "communicationDesc": "Weka timu, wateja na wasaidizi wakiwa wameunganishwa kwa wakati halisi na ujumbe uliounganishwa.",
+    "logistics": "Uratibu wa Vifaa",
+    "logisticsDesc": "Pata bidhaa bora, pata punguzo la wasambazaji na upate zawadi za kurudishiwa pesa."
+  },
+  "pricing": {
+    "title": "Bei Rahisi na za Wazi",
+    "description": "Chagua mpango unaofaa mahitaji ya mradi wako. Anza bure na uboreshe unavyokua.",
+    "freemium": "Freemium",
+    "freemium_price": "Bure",
+    "freemium_duration": "kwa mradi 1",
+    "basic": "Basic",
+    "basic_price": "$15",
+    "basic_duration": "kwa mwezi",
+    "premium": "Premium",
+    "premium_price": "$30",
+    "premium_duration": "kwa mwezi",
+    "popular": "Maarufu Zaidi",
+    "getStarted": "Anza",
+    "upgrade": "Boresha Mpango"
+  },
+  "testimonials": {
+    "title": "Watumiaji Wetu Wanasema Nini",
+    "description": "Jiunge na maelfu ya wataalam wa kigeni wanaoamini DomusBuilder Hub kwa miradi yao ya ujenzi."
+  },
+  "cta": {
+    "title": "Uko Tayari Kubadilisha Usimamizi Wako wa Ujenzi?",
+    "description": "Jiunge na maelfu ya wataalam wa kigeni ambao wamesimamia miradi yao ya ujenzi kwa mafanikio kwa mbali na DomusBuilder Hub.",
+    "cta_trial": "Anza Jaribio Lako la Bure",
+    "cta_sales": "Wasiliana na Mauzo"
+  }
+}

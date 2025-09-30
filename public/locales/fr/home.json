@@ -1,0 +1,60 @@
+{
+  "hero": {
+    "title1": "Domus Builder est votre logiciel de gestion de construction tout-en-un puissant",
+    "title2": "L'outil le plus abordable et le plus simple qui simplifie la gestion de la construction de maisons depuis n'importe où",
+    "description": "Donnez-vous les moyens de suivre, gérer et collaborer en toute transparence sur des projets de construction résidentielle depuis n'importe où dans le monde avec notre plateforme complète conçue pour les expatriés.",
+    "cta_trial": "Commencer l'essai gratuit",
+    "cta_learn": "En savoir plus",
+    "trial_info1": "Essai gratuit de 30 jours",
+    "trial_info2": "Aucune carte de crédit requise",
+    "trial_info3": "Annulez à tout moment"
+  },
+  "builderTypes": {
+    "title": "Conçu pour chaque type de constructeur",
+    "description": "Que vous construisiez à partir de zéro, rénoviez ou vous spécialisiez dans un métier spécifique, notre plateforme s'adapte à vos besoins uniques.",
+    "homeBuilders": "Constructeurs de maisons",
+    "homeBuildersDesc": "Pour que les constructeurs de maisons puissent gérer avec succès leurs projets de construction en un seul endroit.",
+    "renovation": "Rénovation/Réaménagement",
+    "renovationDesc": "Une seule plateforme pour gérer tous les projets de rénovation - cuisines, salles de bains, ajouts et rénovations complètes de maisons.",
+    "specialty": "Entrepreneurs spécialisés",
+    "specialtyDesc": "Les couvreurs, paysagistes, constructeurs de piscines, peintres peuvent gérer chaque phase de leurs projets ici même."
+  },
+  "operations": {
+    "title": "Opérations rationalisées",
+    "description": "Des outils complets pour gérer chaque aspect de votre projet de construction avec précision et efficacité.",
+    "dashboard": "Tableau de bord de gestion de projet",
+    "dashboardDesc": "Planifiez, suivez et terminez les projets avec facilité à l'aide de notre tableau de bord complet.",
+    "financial": "Suivi financier",
+    "financialDesc": "Optimisez les flux de trésorerie et augmentez la rentabilité avec des outils de gestion financière avancés.",
+    "communication": "Hub de communication",
+    "communicationDesc": "Gardez les équipes, les clients et les sous-traitants connectés en temps réel avec une messagerie intégrée.",
+    "logistics": "Coordination logistique",
+    "logisticsDesc": "Trouvez les meilleurs produits, obtenez des remises de fournisseurs et gagnez des récompenses en cashback."
+  },
+  "pricing": {
+    "title": "Tarification simple et transparente",
+    "description": "Choisissez le plan qui correspond aux besoins de votre projet. Commencez gratuitement et mettez à niveau à mesure que vous grandissez.",
+    "freemium": "Freemium",
+    "freemium_price": "Gratuit",
+    "freemium_duration": "pour 1 projet",
+    "basic": "De base",
+    "basic_price": "15 $",
+    "basic_duration": "par mois",
+    "premium": "Premium",
+    "premium_price": "30 $",
+    "premium_duration": "par mois",
+    "popular": "Le plus populaire",
+    "getStarted": "Commencer",
+    "upgrade": "Mettre à niveau le plan"
+  },
+  "testimonials": {
+    "title": "Ce que disent nos utilisateurs",
+    "description": "Rejoignez des milliers d'expatriés qui font confiance à DomusBuilder Hub pour leurs projets de construction."
+  },
+  "cta": {
+    "title": "Prêt à transformer votre gestion de la construction ?",
+    "description": "Rejoignez des milliers d'expatriés qui ont géré avec succès leurs projets de construction à distance avec DomusBuilder Hub.",
+    "cta_trial": "Commencez votre essai gratuit",
+    "cta_sales": "Contacter les ventes"
+  }
+}

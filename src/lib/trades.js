@@ -1,0 +1,22 @@
+export const trades = [
+  "Carpenter",
+  "Electrician",
+  "Plumber",
+  "Painter",
+  "Mason",
+  "Roofer",
+  "Welder",
+  "Glazier",
+  "HVAC Technician",
+  "Drywall Installer",
+  "Flooring Installer",
+  "Landscaper",
+  "General Laborer",
+  "Equipment Operator",
+  "Foreman",
+  "Project Manager",
+  "Surveyor",
+  "Ironworker",
+  "Concrete Finisher",
+  "Tile Setter"
+];

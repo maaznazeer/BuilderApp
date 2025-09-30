@@ -1,0 +1,58 @@
+{
+  "navbar": {
+    "home": "Home",
+    "features": "Features",
+    "solutions": "Solutions",
+    "toolkits": "Toolkits",
+    "about": "About",
+    "pricing": "Pricing",
+    "contact": "Contact",
+    "request_demo": "Request Demo",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "user_permissions": "User Permissions"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "services": "Services",
+    "contactInfo": "Contact Info",
+    "tagline": "Building Dreams, One Project at a Time.",
+    "contactAddress": "123 Builder's Lane, Construction City, BC 12345",
+    "newsletterTitle": "Stay Updated",
+    "newsletterDescription": "Subscribe to our newsletter for the latest updates and exclusive offers.",
+    "emailPlaceholder": "Your email address",
+    "subscribe": "Subscribe",
+    "copyright": "© 2025 DOMUSbuilder. All rights reserved."
+  },
+  "toast": {
+    "feature_not_implemented": "🚧 This feature isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
+  },
+  "signup": {
+    "description": "Sign up to begin your construction journey with DOMUS builder.",
+    "name_label": "Full Name",
+    "email_label": "Email",
+    "password_label": "Password",
+    "agree_terms": "I agree to the",
+    "terms_link": "Terms of Service",
+    "and": "and",
+    "privacy_link": "Privacy Policy",
+    "or_signup_with": "Or sign up with",
+    "has_account": "Already have an account?",
+    "signin_link": "Sign in here",
+    "loading": "Creating Account..."
+  },
+  "login": {
+    "title": "Login",
+    "description": "Log in to your DOMUS builder account.",
+    "email_label": "Email",
+    "password_label": "Password",
+    "forgot_password": "Forgot password?",
+    "submit": "Login",
+    "or_continue_with": "Or continue with",
+    "no_account": "Don't have an account?",
+    "signup_link": "Sign up here",
+    "loading": "Logging in..."
+  }
+}

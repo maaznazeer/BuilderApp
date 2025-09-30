@@ -1,0 +1,32 @@
+{
+  "navbar": {
+    "home": "Nyumbani",
+    "features": "Vipengele",
+    "solutions": "Suluhisho",
+    "toolkits": "Zana",
+    "about": "Kuhusu Sisi",
+    "pricing": "Bei",
+    "contact": "Mawasiliano",
+    "request_demo": "Omba Demo",
+    "login": "Ingia",
+    "register": "Jisajili",
+    "dashboard": "Dashibodi",
+    "profile": "Wasifu",
+    "user_permissions": "Ruhusa za Mtumiaji"
+  },
+  "footer": {
+    "quickLinks": "Viungo vya Haraka",
+    "services": "Huduma",
+    "contactInfo": "Maelezo ya Mawasiliano",
+    "tagline": "Kujenga Ndoto, Mradi Mmoja Baada ya Mwingine.",
+    "contactAddress": "123 Builder's Lane, Construction City, BC 12345",
+    "newsletterTitle": "Pata Habari Mpya",
+    "newsletterDescription": "Jisajili kwenye jarida letu kwa sasisho za hivi punde na ofa za kipekee.",
+    "emailPlaceholder": "Barua pepe yako",
+    "subscribe": "Jisajili",
+    "copyright": "© 2025 DOMUSbuilder. Haki zote zimehifadhiwa."
+  },
+  "toast": {
+    "feature_not_implemented": "🚧 Kipengele hiki bado hakijatekelezwa—lakini usijali! Unaweza kukiomba katika kidokezo chako kijacho! 🚀"
+  }
+}

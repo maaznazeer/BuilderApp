@@ -1,0 +1,173 @@
+{
+  "hero": {
+    "title": "Build Smarter, Not Harder.",
+    "subtitle": "The ultimate OS for construction projects in emerging markets. Manage your budget, team, and timeline all in one place—from anywhere in the world.",
+    "cta_main": "Start Free Trial",
+    "cta_secondary": "Request a Demo"
+  },
+  "operations": {
+    "title": "Streamline Your Operations",
+    "description": "DomusBuilder offers a comprehensive suite of tools designed to simplify project management.",
+    "items": [
+      {
+        "name": "Financial Control",
+        "description": "Track expenses, manage budgets, and make data-driven decisions with our intuitive financial tools."
+      },
+      {
+        "name": "Team Collaboration",
+        "description": "Keep your entire team in sync with real-time updates, task assignments, and centralized communication."
+      },
+      {
+        "name": "Timeline Management",
+        "description": "Visualize your project's progress, set milestones, and ensure timely completion with our Gantt charts."
+      }
+    ]
+  },
+  "builderTypes": {
+    "title": "Built for Every Builder",
+    "description": "Whether you're constructing a new home, renovating an existing one, or specializing in a specific trade, DomusBuilder is tailored to your needs.",
+    "types": [
+      {
+        "icon": "Home",
+        "title": "Home Builders",
+        "description": "Manage new construction projects from the ground up with tools for budgeting, scheduling, and client communication.",
+        "link": "/features/home-builders",
+        "features": [
+          { "name": "Blueprint Analysis", "description": "AI-powered analysis of your architectural plans to identify potential issues and optimize material usage.", "iconPath": "M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 10c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z" },
+          { "name": "Subcontractor Management", "description": "Assign tasks, track progress, and manage payments for all your subcontractors in one place.", "iconPath": "M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" },
+          { "name": "Client Portal", "description": "Provide your clients with a dedicated portal to view progress, approve changes, and communicate with your team.", "iconPath": "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.49 0-4.73-.99-6.35-2.61.3-1.04 1.63-1.92 3.4-2.3.55-.12 1.12-.19 1.7-.19.58 0 1.15.07 1.7.19 1.77.38 3.1 1.26 3.4 2.3-1.62 1.62-3.86 2.61-6.35 2.61z" }
+        ]
+      },
+      {
+        "icon": "Builder",
+        "title": "Renovation Experts",
+        "description": "Transform existing spaces with precision. Track budgets, manage suppliers, and document every step of the renovation process.",
+        "link": "/features/renovation-experts",
+        "features": [
+          { "name": "Before & After Showcase", "description": "Easily create stunning visual comparisons to showcase your work to potential clients.", "iconPath": "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" },
+          { "name": "Material & Finish Selection", "description": "Collaborate with clients on material and finish choices, with a visual library and budget impact analysis.", "iconPath": "M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-8h14V7H7v2z" },
+          { "name": "Change Order Management", "description": "Streamline the change order process with digital approvals, transparent pricing, and schedule adjustments.", "iconPath": "M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" }
+        ]
+      },
+      {
+        "icon": "Subcontractor",
+        "title": "Specialty Contractors",
+        "description": "Focus on your craft. Get clear instructions, submit progress updates, and manage your payments efficiently.",
+        "link": "/features/specialty-contractors",
+        "features": [
+          { "name": "Task-Specific Work Orders", "description": "Receive detailed work orders with all necessary information, including plans, materials, and deadlines.", "iconPath": "M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" },
+          { "name": "Mobile Field Updates", "description": "Submit progress photos, daily logs, and completion reports directly from the job site using your phone.", "iconPath": "M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" },
+          { "name": "Invoice & Payment Tracking", "description": "Generate and submit invoices with ease, and track payment status in real-time.", "iconPath": "M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20z" }
+        ]
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "Trusted by Builders Worldwide",
+    "items": [
+      {
+        "quote": "DomusBuilder has revolutionized how we manage our projects. The financial tracking is a game-changer.",
+        "author": "John Doe",
+        "company": "CEO, BuildRight Inc."
+      },
+      {
+        "quote": "As a diaspora investor, this app gives me the peace of mind I need. I can see every detail from thousands of miles away.",
+        "author": "Femi Adebayo",
+        "company": "Diaspora Homeowner"
+      },
+      {
+        "quote": "The collaboration tools are top-notch. Our team has never been more efficient.",
+        "author": "Maria Garcia",
+        "company": "Project Manager, Renovate Co."
+      }
+    ]
+  },
+  "pricing": {
+    "title": "Transparent Pricing for Every Team",
+    "description": "Choose the plan that fits your needs. No hidden fees, no surprises.",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "annually": "Annually",
+    "save20": "Save 20%",
+    "popular": "Most Popular",
+    "standardPlans": "Standard Plans",
+    "alternativeOptions": "Alternative Options",
+    "plans_v2": [
+      {
+        "name": "Freemium",
+        "price": { "monthly": "$0", "quarterly": "$0", "annually": "$0" },
+        "duration": "/forever",
+        "description": "For individuals and small teams getting started.",
+        "features": [
+          "1 Project",
+          "Basic financial tracking",
+          "Standard task management",
+          "Community support"
+        ],
+        "popular": false,
+        "ctaText": "Start for Free",
+        "ctaLink": "/signup?plan=free"
+      },
+      {
+        "name": "Essential",
+        "price": { "monthly": "$18", "quarterly": "$50", "annually": "$172" },
+        "duration": "/user/mo",
+        "description": "For growing businesses managing multiple projects.",
+        "features": [
+          "Up to 5 Projects",
+          "Advanced financial tools & reporting",
+          "Team collaboration tools",
+          "Priority email support"
+        ],
+        "popular": false,
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup?plan=essential"
+      },
+      {
+        "name": "Pro",
+        "price": { "monthly": "$35", "quarterly": "$95", "annually": "$336" },
+        "duration": "/user/mo",
+        "description": "For established businesses that need more power.",
+        "features": [
+          "Up to 20 Projects",
+          "Gantt charts & dependencies",
+          "AI-Powered Insights",
+          "Advanced Reporting"
+        ],
+        "popular": true,
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup?plan=pro"
+      },
+      {
+        "name": "Premium",
+        "price": { "monthly": "$60", "quarterly": "$160", "annually": "$576" },
+        "duration": "/user/mo",
+        "description": "For large organizations with complex needs.",
+        "features": [
+          "Unlimited Projects",
+          "Dedicated account manager",
+          "Custom integrations & API access",
+          "24/7 premium support"
+        ],
+        "popular": false,
+        "ctaText": "Contact Sales",
+        "ctaLink": "/contact"
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to take control of your construction projects?",
+    "cta_main": "Start Building for Free"
+  },
+  "footer": {
+    "solutions": "Solutions",
+    "support": "Support",
+    "company": "Company",
+    "legal": "Legal",
+    "subscribe_title": "Subscribe to our newsletter",
+    "subscribe_description": "The latest news, articles, and resources, sent to your inbox weekly.",
+    "subscribe_placeholder": "Enter your email",
+    "subscribe_button": "Subscribe",
+    "copyright": "© 2025 DomusBuilder, Inc. All rights reserved."
+  }
+}
