@@ -18,10 +18,12 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import Papa from 'papaparse';
 import { domusDbApi } from '@/api/domusDbApi';
+import { useProject } from '@/contexts/ProjectContext';
 
 const SupplierForm = ({ open, setOpen, supplier, onSupplierUpdate }) => {
     const { t } = useTranslation();
     const { toast } = useToast();
+    const { selectedProject } = useProject();
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
     
@@ -50,7 +52,8 @@ const SupplierForm = ({ open, setOpen, supplier, onSupplierUpdate }) => {
 
         const payload = {
             ...formData,
-            categories_served: formData.categories_served ? formData.categories_served.split(',').map(s => s.trim()) : []
+            categories_served: formData.categories_served ? formData.categories_served.split(',').map(s => s.trim()) : [],
+            project_id: selectedProject?.id
         };
         delete payload.id;
         delete payload.created_at;
@@ -123,6 +126,7 @@ const SupplierForm = ({ open, setOpen, supplier, onSupplierUpdate }) => {
 const SuppliersPage = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const { selectedProject } = useProject();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openForm, setOpenForm] = useState(false);
@@ -132,20 +136,24 @@ const SuppliersPage = () => {
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await domusDbApi.getSuppliers();
+      const data = await domusDbApi.getSuppliers(selectedProject?.id);
       setSuppliers(data);
     } catch (error) {
       toast({ title: 'Error fetching suppliers', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, selectedProject?.id]);
 
   useEffect(() => {
     fetchSuppliers();
   }, [fetchSuppliers]);
 
   const handleAdd = () => {
+      if (!selectedProject) {
+          toast({ title: 'No Project Selected', description: 'Please select a project before adding suppliers.', variant: 'destructive' });
+          return;
+      }
       setSelectedSupplier(null);
       setOpenForm(true);
   };
@@ -194,6 +202,7 @@ const SuppliersPage = () => {
                 phone: row.phone,
                 website: row.website,
                 categories_served: row.categories_served ? row.categories_served.split(',').map(s => s.trim()) : null,
+                project_id: selectedProject?.id,
             }));
 
             const { error } = await supabase.from('suppliers').upsert(dataToInsert, { onConflict: 'supplier_code' });
@@ -226,6 +235,9 @@ const SuppliersPage = () => {
             <div>
                 <h1 className="text-3xl font-bold text-gray-800">Supplier Directory</h1>
                 <p className="text-gray-500">Manage your network of suppliers and vendors.</p>
+                {selectedProject && (
+                    <p className="text-sm text-blue-600 mt-1">Project: {selectedProject.name}</p>
+                )}
             </div>
             <div className="flex items-center gap-2">
                 <Button asChild variant="outline">

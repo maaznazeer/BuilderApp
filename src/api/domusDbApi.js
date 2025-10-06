@@ -1,106 +1,118 @@
 import { supabase } from '@/lib/customSupabaseClient';
 
-const BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1`;
-
-const getHeaders = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    // When a user is logged in, we must use their access token (JWT) for authorization.
-    // The anon key is only for requests where a user is not authenticated.
-    const token = session?.access_token;
-
-    if (!token) {
-        // This case should ideally not happen for authenticated routes.
-        // Fallback to anon key for public data if necessary, but it's better to ensure a session exists.
-        console.warn("No user session found, using anon key for API request. Data may be restricted.");
-    }
-    
-    return {
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-    };
-};
-
-const apiFetch = async (endpoint) => {
-    const headers = await getHeaders();
-    const response = await fetch(`${BASE_URL}${endpoint}`, { headers });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        // Check for common auth errors to provide better feedback.
-        if (response.status === 401 || (errorData.message && (errorData.message.includes('JWT') || errorData.message.includes('token')))) {
-            throw new Error('Your session may have expired. Please try re-authenticating.');
-        }
-        throw new Error(errorData.message || `API Error: ${response.statusText}`);
-    }
-    return response.json();
-};
-
 export const domusDbApi = {
-    getMetrics: () => {
-        return apiFetch('/v_dashboard_metrics?select=*');
+    getMetrics: async () => {
+        const { data, error } = await supabase.from('v_dashboard_metrics').select('*');
+        if (error) throw error;
+        return data;
     },
-    getProjectCards: () => {
-        return apiFetch('/v_dashboard_project_cards?select=*&order=last_activity_at.desc');
+    getProjectCards: async () => {
+        const { data, error } = await supabase.from('v_dashboard_project_cards').select('*').order('last_activity_at', { ascending: false });
+        if (error) throw error;
+        return data;
     },
-    getActivity: () => {
-        return apiFetch('/v_dashboard_activity?select=*&limit=20');
+    getActivity: async () => {
+        const { data, error } = await supabase.from('v_dashboard_activity').select('*').limit(20);
+        if (error) throw error;
+        return data;
     },
-    getProjects: () => {
-        return apiFetch('/projects?select=*&order=updated_at.desc');
+    getProjects: async () => {
+        const { data, error } = await supabase.from('projects').select('*').order('updated_at', { ascending: false });
+        if (error) throw error;
+        return data;
     },
-    getPlannerTasks: () => {
-        return apiFetch('/tasks?select=*,milestone:milestones(title),assignee:profiles(full_name)&order=due_date.asc');
+    getPlannerTasks: async () => {
+        const { data, error } = await supabase.from('tasks').select('*,milestone:milestones(title),assignee:profiles(full_name)').order('due_date', { ascending: true });
+        if (error) throw error;
+        return data;
     },
-    getConstructionProcesses: () => {
-        return apiFetch('/construction_processes?select=*');
+    getConstructionProcesses: async () => {
+        const { data, error } = await supabase.from('construction_processes').select('*');
+        if (error) throw error;
+        return data;
     },
-    getWorkflowTemplates: () => {
-        return apiFetch('/workflow_templates?select=*');
+    getWorkflowTemplates: async () => {
+        const { data, error } = await supabase.from('workflow_templates').select('*');
+        if (error) throw error;
+        return data;
     },
-    getAutomations: () => {
-        return apiFetch('/automations?select=*');
+    getAutomations: async () => {
+        const { data, error } = await supabase.from('automations').select('*');
+        if (error) throw error;
+        return data;
     },
-    getWorkers: () => {
-        return apiFetch('/workers?select=*&order=created_at.desc');
+    getWorkers: async () => {
+        const { data, error } = await supabase.from('workers').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
     },
-    getPayrollRuns: () => {
-        return apiFetch('/payroll_runs?select=*&order=run_date.desc');
+    getPayrollRuns: async () => {
+        const { data, error } = await supabase.from('payroll_runs').select('*').order('run_date', { ascending: false });
+        if (error) throw error;
+        return data;
     },
-    getSuppliers: () => {
-        return apiFetch('/suppliers?select=*');
+    getSuppliers: async (projectId) => {
+        let query = supabase.from('suppliers').select('*');
+        if (projectId) {
+            query = query.eq('project_id', projectId);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return data;
     },
-    getInventoryItems: () => {
-        return apiFetch('/inventory_items?select=*');
+    getInventoryItems: async () => {
+        const { data, error } = await supabase.from('inventory_items').select('*');
+        if (error) throw error;
+        return data;
     },
-    getMaterialPurchases: () => {
-        return apiFetch('/material_purchases?select=*');
+    getMaterialPurchases: async () => {
+        const { data, error } = await supabase.from('material_purchases').select('*');
+        if (error) throw error;
+        return data;
     },
-    getGoodsReceivedNotes: () => {
-        return apiFetch('/grn?select=*');
+    getGoodsReceivedNotes: async () => {
+        const { data, error } = await supabase.from('grn').select('*');
+        if (error) throw error;
+        return data;
     },
-    getGoodsIssueNotes: () => {
-        return apiFetch('/gin?select=*');
+    getGoodsIssueNotes: async () => {
+        const { data, error } = await supabase.from('gin').select('*');
+        if (error) throw error;
+        return data;
     },
-    getStockMovements: () => {
-        return apiFetch('/stock_movements?select=*');
+    getStockMovements: async () => {
+        const { data, error } = await supabase.from('stock_movements').select('*');
+        if (error) throw error;
+        return data;
     },
-    getProjectMaterials: () => {
-        return apiFetch('/project_materials?select=*');
+    getProjectMaterials: async () => {
+        const { data, error } = await supabase.from('project_materials').select('*');
+        if (error) throw error;
+        return data;
     },
-    getFinancialLedger: () => {
-        return apiFetch('/financial_ledger?select=*&order=tx_date.desc');
+    getFinancialLedger: async () => {
+        const { data, error } = await supabase.from('financial_ledger').select('*').order('tx_date', { ascending: false });
+        if (error) throw error;
+        return data;
     },
-    getBalanceDigests: () => {
-        return apiFetch('/balance_digests?select=*');
+    getBalanceDigests: async () => {
+        const { data, error } = await supabase.from('balance_digests').select('*');
+        if (error) throw error;
+        return data;
     },
-    getReconciliations: () => {
-        return apiFetch('/reconciliations?select=*');
+    getReconciliations: async () => {
+        const { data, error } = await supabase.from('reconciliations').select('*');
+        if (error) throw error;
+        return data;
     },
-    getFinancialReports: () => {
-        return apiFetch('/financial_reports?select=*');
+    getFinancialReports: async () => {
+        const { data, error } = await supabase.from('financial_reports').select('*');
+        if (error) throw error;
+        return data;
     },
-    getProjectSettings: () => {
-        return apiFetch('/project_settings?select=*');
+    getProjectSettings: async () => {
+        const { data, error } = await supabase.from('project_settings').select('*');
+        if (error) throw error;
+        return data;
     },
 };
