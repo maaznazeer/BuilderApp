@@ -3,6 +3,7 @@ import {
         Users, Truck, Warehouse, ShoppingCart, ArrowRightLeft,
         FileText, Settings, Bot, DollarSign, Banknote, BookOpen, Repeat, CreditCard, HardHat, Cog, Shield, Sparkles, BrainCircuit, HelpCircle
     } from 'lucide-react';
+import { hasModuleAccess, hasFullAccess, hasLimitedAccess, getAvailableFeatures } from '@/lib/rolePermissions';
     
     export const dashboardConfig = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard, permission: 'view_overview' },
@@ -33,42 +34,90 @@ import {
     
     export const getSidebarNavItems = (profile, onFaqOpen) => {
         const isAdmin = profile?.role === 'super_owner' || profile?.role === 'system_admin';
+        const userRole = profile?.app_role || profile?.role;
+        
+        // Helper function to filter children based on role permissions
+        const filterChildrenByRole = (children, module) => {
+            if (!hasModuleAccess(userRole, module)) return [];
+            
+            if (hasFullAccess(userRole, module)) {
+                return children;
+            }
+            
+            if (hasLimitedAccess(userRole, module)) {
+                const availableFeatures = getAvailableFeatures(userRole, module);
+                return children.filter(child => {
+                    if (availableFeatures === 'all') return true;
+                    return availableFeatures.some(feature => {
+                        // Convert feature name to match href format (underscores to hyphens)
+                        const featureHyphen = feature.replace(/_/g, '-');
+                        const featureSpace = feature.replace(/_/g, ' ');
+                        return child.href?.includes(featureHyphen) || 
+                               child.href?.includes(feature) ||
+                               child.title?.toLowerCase().includes(featureSpace) ||
+                               child.title?.toLowerCase().includes(feature);
+                    });
+                });
+            }
+            
+            return [];
+        };
     
         const navItems = [
             {
                 items: [
-                    { href: '/dashboard/overview', title: 'Overview', icon: LayoutDashboard, color: 'text-sky-400' },
-                    { href: '/dashboard/projects', title: 'Projects', icon: Briefcase, color: 'text-violet-400' },
-                    { href: '/dashboard/project-management', title: 'Planner', icon: Calendar, color: 'text-emerald-400' },
-                    { href: '/dashboard/ask-brain', title: 'Ask-Builder Brain', icon: BrainCircuit, color: 'text-amber-400' }
-                ],
+                    hasModuleAccess(userRole, 'overview') && { 
+                        href: '/dashboard/overview', 
+                        title: 'Overview', 
+                        icon: LayoutDashboard, 
+                        color: 'text-sky-400' 
+                    },
+                    hasModuleAccess(userRole, 'projects') && { 
+                        href: '/dashboard/projects', 
+                        title: 'Projects', 
+                        icon: Briefcase, 
+                        color: 'text-violet-400' 
+                    },
+                    hasModuleAccess(userRole, 'planner') && { 
+                        href: '/dashboard/project-management', 
+                        title: 'Planner', 
+                        icon: Calendar, 
+                        color: 'text-emerald-400' 
+                    },
+                    hasModuleAccess(userRole, 'askBuilder') && { 
+                        href: '/dashboard/ask-brain', 
+                        title: 'Ask-Builder Brain', 
+                        icon: BrainCircuit, 
+                        color: 'text-amber-400' 
+                    }
+                ].filter(Boolean),
             },
             {
                 items: [
-                    {
+                    hasModuleAccess(userRole, 'constructionMgt') && {
                         title: 'Construction Mgt',
                         icon: HardHat,
                         color: 'text-rose-400',
-                        children: [
+                        children: filterChildrenByRole([
                             { href: '/dashboard/construction-process', title: 'Construction Process', icon: ClipboardCheck, color: 'text-rose-400' },
                             { href: '/dashboard/workflow-templates', title: 'Workflow Templates', icon: FileText, color: 'text-orange-400' },
                             { href: '/dashboard/automations', title: 'Automations', icon: Bot, color: 'text-yellow-400' }
-                        ]
+                        ], 'constructionMgt')
                     },
-                    {
+                    hasModuleAccess(userRole, 'workforce') && {
                         title: 'Workforce',
                         icon: Users,
                         color: 'text-teal-400',
-                        children: [
+                        children: filterChildrenByRole([
                             { href: '/dashboard/workers', title: 'Workers', icon: Users, color: 'text-teal-400' },
                             { href: '/dashboard/payroll', title: 'Payroll', icon: CreditCard, color: 'text-green-400' },
-                        ]
+                        ], 'workforce')
                     },
-                    {
+                    hasModuleAccess(userRole, 'supplyChain') && {
                         title: 'Supply Chain',
                         icon: Truck,
                         color: 'text-fuchsia-400',
-                        children: [
+                        children: filterChildrenByRole([
                             { href: '/dashboard/suppliers', title: 'Suppliers', icon: Truck, color: 'text-fuchsia-400' },
                             { href: '/dashboard/inventory', title: 'Inventory', icon: Warehouse, color: 'text-purple-400' },
                             { href: '/dashboard/purchases', title: 'Material Purchases', icon: ShoppingCart, color: 'text-pink-400' },
@@ -76,35 +125,35 @@ import {
                             { href: '/dashboard/gin', title: 'Goods Issue Notes', icon: FileText, color: 'text-red-400' },
                             { href: '/dashboard/stock-movements', title: 'Stock Movements', icon: ArrowRightLeft, color: 'text-indigo-400' },
                             { href: '/dashboard/project-materials', title: 'Project Materials', icon: ClipboardCheck, color: 'text-blue-400' }
-                        ]
+                        ], 'supplyChain')
                     },
-                    {
+                    hasModuleAccess(userRole, 'financials') && {
                         title: 'Financials',
                         icon: DollarSign,
                         color: 'text-cyan-400',
-                        children: [
+                        children: filterChildrenByRole([
                             { href: '/dashboard/financial-ledger', title: 'Financial Ledger', icon: BookOpen, color: 'text-cyan-400' },
                             { href: '/dashboard/balance-digests', title: 'Balance Digests', icon: Banknote, color: 'text-lime-400' },
                             { href: '/dashboard/reconciliation', title: 'Reconciliation', icon: Repeat, color: 'text-green-400' },
                             { href: '/dashboard/reports', title: 'Reports', icon: FileText, color: 'text-gray-400' }
-                        ]
+                        ], 'financials')
                     },
-                    {
+                    hasModuleAccess(userRole, 'configuration') && {
                         title: 'Configuration',
                         icon: Cog,
                         color: 'text-slate-400',
-                        children: [
+                        children: filterChildrenByRole([
                             { href: '/dashboard/project-settings', title: 'Project Settings', icon: Settings, color: 'text-slate-400' },
-                        ]
+                        ], 'configuration')
                     },
-                    {
+                    hasModuleAccess(userRole, 'help') && {
                         title: 'Help / FAQ',
                         icon: HelpCircle,
                         color: 'text-blue-300',
                         isCustom: true,
                         onClick: onFaqOpen
                     },
-                ]
+                ].filter(Boolean)
             }
         ];
     
