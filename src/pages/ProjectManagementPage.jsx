@@ -11,12 +11,15 @@ import React, { useState, useEffect, useCallback } from 'react';
     import TimeAndReportsView from '@/components/project-management/TimeAndReportsView.jsx';
     import ProjectMaterialsPage from '@/pages/ProjectMaterialsPage.jsx';
     import PayrollGridWidget from '@/components/payroll/PayrollGridWidget.jsx';
-    import { GanttChartSquare, Users, CalendarDays, BarChart3, Wallet, Clock, Package, Banknote } from 'lucide-react';
-    import { useToast } from '@/components/ui/use-toast';
+import { GanttChartSquare, Users, CalendarDays, BarChart3, Wallet, Clock, Package, Banknote } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
     
     const ProjectManagementPage = () => {
         const { t, i18n } = useTranslation();
         const { toast } = useToast();
+        const { profile } = useAuth();
+        const isSubcontractor = profile?.app_role?.toLowerCase() === 'subcontractor';
         const [activeTab, setActiveTab] = useState('gantt');
         const [projects, setProjects] = useState([]);
         const [selectedProject, setSelectedProject] = useState(null);
@@ -44,7 +47,11 @@ import React, { useState, useEffect, useCallback } from 'react';
     
         const commonProps = { projects, setProjects, selectedProject, setSelectedProject, refreshProjects: fetchProjects };
     
-        const tabs = [
+        const tabs = isSubcontractor ? [
+            { value: 'calendars', label: t('Calendars'), icon: CalendarDays, component: <CalendarsView {...commonProps} /> },
+            { value: 'workload', label: t('Workload'), icon: BarChart3, component: <WorkloadView {...commonProps} /> },
+            { value: 'materials', label: t('Materials'), icon: Package, component: <ProjectMaterialsPage {...commonProps} /> },
+        ] : [
             { value: 'gantt', label: t('Gantt'), icon: GanttChartSquare, component: <GanttView {...commonProps} /> },
             { value: 'materials', label: t('Materials'), icon: Package, component: <ProjectMaterialsPage {...commonProps} /> },
             { value: 'payroll', label: t('Payroll'), icon: Banknote, component: <PayrollGridWidget {...commonProps} /> },

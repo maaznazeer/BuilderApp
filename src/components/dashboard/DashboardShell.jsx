@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import CurrencyProvider from '@/contexts/CurrencyProvider.jsx';
 import CurrencySelect from '@/components/currency/CurrencySelect.jsx';
+import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
+import { hasFullAccess } from '@/lib/rolePermissions.js';
 
 function Breadcrumbs() {
   const { pathname } = useLocation();
@@ -26,14 +28,17 @@ function Breadcrumbs() {
 }
 
 export default function DashboardShell({ children, active }) {
+  const { profile } = useAuth();
+  const canSeeFinancials = profile?.app_role?.toLowerCase() === 'homeowner' || profile?.app_role?.toLowerCase() === 'homebuilder';
+  
   const items = [
     ['Overview', '/dashboard/overview'],
     ['Projects', '/dashboard/projects'],
     ['Workforce', '/dashboard/workforce'],
-    ['Financials', '/dashboard/financials'],
+    canSeeFinancials && ['Financials', '/dashboard/financials'],
     ['Supply Chain', '/dashboard/supply-chain'],
     ['Alerts', '/dashboard/alerts'],
-  ];
+  ].filter(Boolean);
 
   return (
     <CurrencyProvider>

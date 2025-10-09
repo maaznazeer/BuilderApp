@@ -30,9 +30,9 @@ export const ROLE_PERMISSIONS = {
     planner: 'limited', // Calendar, Workload, Materials
     askBuilder: 'limited',
     constructionMgt: 'no',
-    workforce: 'limited', // timesheets, Tasks & Work Orders
+    workforce: 'full', // timesheets, Tasks & Work Orders
     supplyChain: 'limited', // GRN, GIN, Stock Movements, Project Materials
-    financials: 'limited',
+    financials: 'full',
     configuration: 'no',
     help: 'limited'
   }
