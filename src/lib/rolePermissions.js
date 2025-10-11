@@ -32,7 +32,7 @@ export const ROLE_PERMISSIONS = {
     constructionMgt: 'no',
     workforce: 'full', // timesheets, Tasks & Work Orders
     supplyChain: 'limited', // GRN, GIN, Stock Movements, Project Materials
-    financials: 'full',
+    financials: 'no',
     configuration: 'no',
     help: 'limited'
   }

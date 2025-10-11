@@ -21,14 +21,14 @@ const StatCard = ({ icon: Icon, value, label, link, color, isLoading }) => {
   }
 
   return (
-    <Link to={link} className="block hover:bg-muted/50 p-3 rounded-lg transition-colors">
-      <div className="flex items-center space-x-3">
-        <div className={`p-2 rounded-lg bg-opacity-10 ${color.bg}`}>
-          <Icon className={`h-6 w-6 ${color.text}`} />
+    <Link to={link} className="block hover:bg-muted/50 p-2 rounded-lg transition-colors">
+      <div className="flex items-center space-x-2">
+        <div className={`p-1.5 rounded-lg bg-opacity-10 ${color.bg}`}>
+          <Icon className={`h-4 w-4 ${color.text}`} />
         </div>
         <div>
-          <p className="text-2xl font-bold">{value}</p>
-          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-lg font-bold">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
         </div>
       </div>
     </Link>
@@ -68,15 +68,15 @@ const WelcomeHeader = () => {
 
   return (
     <Card className="w-full bg-gradient-to-r from-background to-muted/30 border-primary/10 border">
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <CardContent className="p-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">
               Welcome back, {firstName} 👋
             </h1>
-            <p className="text-muted-foreground mt-1">Here's a quick look at your construction status.</p>
+            <p className="text-sm text-muted-foreground">Here's a quick look at your construction status.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-8 w-full md:w-auto">
+          <div className="grid grid-cols-3 gap-3 w-full md:w-auto">
             {stats.map((stat, index) => (
               <StatCard key={index} {...stat} isLoading={metricsLoading} />
             ))}

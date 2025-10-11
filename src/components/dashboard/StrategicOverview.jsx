@@ -3,7 +3,7 @@ import { useDashboardModules } from '@/hooks/useDashboardModules.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Banknote, ShoppingCart, Image as ImageIcon, Target, MessageSquare, Shield, GanttChartSquare, Landmark, Zap } from 'lucide-react';
+import { AlertTriangle, Banknote, ShoppingCart, Image as ImageIcon, Target, MessageSquare, Shield, GanttChartSquare, Landmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDashboard } from '@/contexts/DashboardContext.jsx';
@@ -16,15 +16,10 @@ const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', compactDisplay: 'short' }).format(value);
 };
 
-const MiniWidget = ({ icon: Icon, title, data, isLoading, link, isLocked, color }) => {
+const MiniWidget = ({ icon: Icon, title, data, isLoading, link, color }) => {
     const navigate = useNavigate();
     
-    const content = isLocked ? (
-        <div className="flex flex-col items-center justify-center h-full text-center p-2">
-            <Zap className="h-6 w-6 text-accent mb-2"/>
-            <p className="text-xs font-semibold text-muted-foreground">Upgrade to Unlock</p>
-        </div>
-    ) : isLoading ? (
+    const content = isLoading ? (
         <div className="space-y-2">
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
@@ -35,12 +30,11 @@ const MiniWidget = ({ icon: Icon, title, data, isLoading, link, isLocked, color 
 
     return (
         <motion.div 
-          whileHover={{ scale: isLocked ? 1 : 1.03 }} 
+          whileHover={{ scale: 1.03 }} 
           transition={{ type: 'spring', stiffness: 300 }}
           className="motion-safe:transition"
         >
-            <Card className="h-full cursor-pointer relative hover:shadow-md border-l-4 border-primary/20 hover:border-primary/60 transition-colors" onClick={() => navigate(isLocked ? '/pricing' : link)}>
-                {isLocked && <div className="absolute inset-0 bg-background/70 z-10 backdrop-blur-sm rounded-2xl"></div>}
+            <Card className="h-full cursor-pointer hover:shadow-md border-l-4 border-primary/20 hover:border-primary/60 transition-colors" onClick={() => navigate(link)}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{title}</CardTitle>
                     <Icon className={cn("h-4 w-4 text-muted-foreground", color)} />
@@ -55,15 +49,12 @@ const MiniWidget = ({ icon: Icon, title, data, isLoading, link, isLocked, color 
 
 const StrategicOverview = () => {
     const { data, isLoading, isError, error, refetch } = useDashboardModules();
-    const { plan } = useDashboard();
-    const isFreemium = plan?.toLowerCase() === 'freemium';
 
     const widgets = [
         {
             title: 'Budget',
             icon: Banknote,
             link: '/dashboard/budget',
-            isLocked: false,
             color: 'text-green-500',
             render: (d) => (
                 <div>
@@ -76,7 +67,6 @@ const StrategicOverview = () => {
             title: 'Sourcing',
             icon: ShoppingCart,
             link: '/dashboard/sourcing',
-            isLocked: isFreemium,
             color: 'text-sky-500',
             render: (d) => (
                 <div>
@@ -89,7 +79,6 @@ const StrategicOverview = () => {
             title: 'Media',
             icon: ImageIcon,
             link: '/dashboard/media',
-            isLocked: false,
             color: 'text-indigo-500',
             render: (d) => (
                 <div>
@@ -102,7 +91,6 @@ const StrategicOverview = () => {
             title: 'Milestones',
             icon: Target,
             link: '/dashboard/milestones',
-            isLocked: false,
             color: 'text-amber-500',
             render: (d) => (
                 <div>
@@ -115,7 +103,6 @@ const StrategicOverview = () => {
             title: 'Communication',
             icon: MessageSquare,
             link: '/dashboard/communication',
-            isLocked: false,
             color: 'text-cyan-500',
             render: (d) => (
                 <div>
@@ -128,7 +115,6 @@ const StrategicOverview = () => {
             title: 'Contingency',
             icon: Shield,
             link: '/dashboard/contingency',
-            isLocked: isFreemium,
             color: 'text-rose-500',
             render: (d) => (
                 <div>
@@ -141,7 +127,6 @@ const StrategicOverview = () => {
             title: 'Gantt',
             icon: GanttChartSquare,
             link: '/dashboard/project-management',
-            isLocked: isFreemium,
             color: 'text-orange-500',
             render: (d) => (
                 <div>
@@ -154,7 +139,6 @@ const StrategicOverview = () => {
             title: 'Loans',
             icon: Landmark,
             link: '/dashboard/loans',
-            isLocked: isFreemium,
             color: 'text-slate-500',
             render: (d) => (
                 <div>
@@ -179,9 +163,9 @@ const StrategicOverview = () => {
     }
 
     return (
-        <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Strategic Overview</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="h-full flex flex-col">
+            <h2 className="text-xl font-bold text-foreground mb-3 flex-shrink-0">Strategic Overview</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-h-0">
                 {widgets.map((widget, i) => (
                     <MiniWidget
                         key={i}
@@ -190,7 +174,6 @@ const StrategicOverview = () => {
                         link={widget.link}
                         isLoading={isLoading}
                         data={widget.render(data)}
-                        isLocked={widget.isLocked}
                         color={widget.color}
                     />
                 ))}

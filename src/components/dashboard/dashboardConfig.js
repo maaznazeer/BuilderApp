@@ -84,12 +84,12 @@ import { hasModuleAccess, hasFullAccess, hasLimitedAccess, getAvailableFeatures 
                         icon: Calendar, 
                         color: 'text-emerald-400' 
                     },
-                    hasModuleAccess(userRole, 'askBuilder') && { 
-                        href: '/dashboard/ask-brain', 
-                        title: 'Ask-Builder Brain', 
-                        icon: BrainCircuit, 
-                        color: 'text-amber-400' 
-                    }
+                    // hasModuleAccess(userRole, 'askBuilder') && { 
+                    //     href: '/dashboard/ask-brain', 
+                    //     title: 'Ask-Builder Brain', 
+                    //     icon: BrainCircuit, 
+                    //     color: 'text-amber-400' 
+                    // }
                 ].filter(Boolean),
             },
             {
