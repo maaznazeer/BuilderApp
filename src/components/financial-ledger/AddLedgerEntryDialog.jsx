@@ -44,22 +44,22 @@ const ledgerSchema = z.object({
   entry_type: z.enum(['deposit', 'expense']),
   deposit_method: z.string().optional(),
   amount_to_be_received: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().min(0).optional()
+    (a) => (a === '' || a == null ? undefined : Number(a)),
+    z.number().nonnegative().optional()
   ),
   fee_percent: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
+    (a) => (a === '' || a == null ? undefined : Number(a)),
     z.number().min(0).max(100).optional()
   ),
   fee_fixed: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().min(0).optional()
+    (a) => (a === '' || a == null ? undefined : Number(a)),
+    z.number().nonnegative().optional()
   ),
   expense_category: z.string().optional(),
   reason_for_expense: z.string().optional(),
   expense_amount: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().min(0).optional()
+    (a) => (a === '' || a == null ? undefined : Number(a)),
+    z.number().nonnegative().optional()
   ),
   different_transfers: z.string().optional(),
   comment: z.string().optional(),
@@ -113,10 +113,10 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
       date: new Date(),
       project_code: '',
       entry_type: 'deposit',
-      amount_to_be_received: 0,
-      fee_percent: 0,
-      fee_fixed: 0,
-      expense_amount: 0,
+      amount_to_be_received: '',
+      fee_percent: '',
+      fee_fixed: '',
+      expense_amount: '',
     },
   });
 
@@ -165,6 +165,12 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
     setIsSubmitting(false);
   }
   
+  function onInvalid(errors) {
+    const firstKey = Object.keys(errors)[0];
+    const firstError = firstKey ? errors[firstKey]?.message : 'Please fix the highlighted errors.';
+    toast({ variant: 'destructive', title: 'Validation error', description: firstError || 'Please review the form.' });
+  }
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -175,7 +181,7 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -218,14 +224,18 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Project</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {projects.map(p => <SelectItem key={p.project_code} value={p.project_code}>{p.name} ({p.project_code})</SelectItem>)}
+                        {projects.map(p => (
+                          <SelectItem key={p.project_code} value={p.project_code}>
+                            {p.name} ({p.project_code})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -240,7 +250,7 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
               render={({ field }) => (
                 <FormItem>
                     <FormLabel>Entry Type</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <Select onValueChange={field.onChange} value={field.value || undefined}>
                        <FormControl>
                          <SelectTrigger>
                            <SelectValue placeholder="Select entry type" />
@@ -264,7 +274,15 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Deposit Amount ({selectedProject?.currency || '...'})</FormLabel>
-                      <FormControl><Input type="number" step="0.01" {...field} placeholder="e.g., 10000" /></FormControl>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                          placeholder="e.g., 10000"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -276,7 +294,15 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fee (%)</FormLabel>
-                        <FormControl><Input type="number" step="0.01" {...field} placeholder="e.g., 2.5" /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            placeholder="e.g., 2.5"
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
@@ -286,7 +312,15 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fixed Fee ({selectedProject?.currency || '...'})</FormLabel>
-                        <FormControl><Input type="number" step="0.01" {...field} placeholder="e.g., 50" /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            placeholder="e.g., 50"
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
@@ -297,7 +331,7 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Deposit Method</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select a method" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {depositMethods.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
@@ -318,7 +352,15 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Expense Amount ({selectedProject?.currency || '...'})</FormLabel>
-                      <FormControl><Input type="number" step="0.01" {...field} placeholder="e.g., 1500" /></FormControl>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                          placeholder="e.g., 1500"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -329,7 +371,7 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Expense Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {expenseCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -345,7 +387,13 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Reason for Expense</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g., Purchase of cement bags" /></FormControl>
+                      <FormControl>
+                        <Input
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                          placeholder="e.g., Purchase of cement bags"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -359,7 +407,13 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Reference / Transfer Details</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g., Bank transfer ID, Mobile Money receipt" /></FormControl>
+                  <FormControl>
+                    <Input
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      placeholder="e.g., Bank transfer ID, Mobile Money receipt"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -371,7 +425,13 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Comment</FormLabel>
-                  <FormControl><Textarea {...field} placeholder="Add any relevant notes here..." /></FormControl>
+                  <FormControl>
+                    <Textarea
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      placeholder="Add any relevant notes here..."
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
