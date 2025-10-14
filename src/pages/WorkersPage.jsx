@@ -59,7 +59,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             
             const missingHeaders = requiredFields.filter(h => !headers.includes(h));
             if (missingHeaders.length > 0) {
-                toast({ title: t('workers.import_error'), description: `CSV is missing required columns: ${missingHeaders.join(', ')}`, variant: 'destructive' });
+                toast({ title: t('Import Error', { ns: 'custom' }), description: `CSV is missing required columns: ${missingHeaders.join(', ')}`, variant: 'destructive' });
                 setLoading(false);
                 return;
             }
@@ -80,9 +80,9 @@ import React, { useState, useEffect, useCallback } from 'react';
             
             setLoading(false);
             if (error) {
-              toast({ title: t('workers.import_error'), description: error.message, variant: 'destructive' });
+                toast({ title: t('Import Error', { ns: 'custom' }), description: error.message, variant: 'destructive' });
             } else {
-              toast({ title: t('workers.import_success'), description: `${data.length} worker records staged for processing.` });
+              toast({ title: t('Import Success', { ns: 'custom' }), description: `${data.length} worker records staged for processing.` });
               onUpdate();
               setOpen(false);
               setFile(null);
@@ -94,17 +94,17 @@ import React, { useState, useEffect, useCallback } from 'react';
       return (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline"><Upload className="mr-2 h-4 w-4" />{t('workers.import_data')}</Button>
+            <Button variant="outline"><Upload className="mr-2 h-4 w-4" />{t('Import Data', { ns: 'custom' })}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('workers.import_dialog_title')}</DialogTitle>
-              <DialogDescription>{t('workers.import_dialog_desc')}</DialogDescription>
+              <DialogTitle>{t('Import Worker Data', { ns: 'custom' })}</DialogTitle>
+              <DialogDescription>{t('Import a CSV file with worker details. Ensure it has columns: worker_code, first_name, surname.', { ns: 'custom' })}</DialogDescription>
             </DialogHeader>
             <div className="py-4"><Input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} /></div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>{t('materials.cancel')}</Button>
-              <Button onClick={handleImport} disabled={!file || loading}>{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('workers.importing')}</> : t('workers.import_data')}</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>{t('Cancel', { ns: 'custom' })}</Button>
+              <Button onClick={handleImport} disabled={!file || loading}>{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('Importing', { ns: 'custom' })}</> : t('Import Data', { ns: 'custom' })}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -193,15 +193,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 
       const getWorkerStatus = (worker) => {
         if (worker.project_completed) {
-          return { text: t('workers.project_completed', { ns: 'custom' }), variant: 'default' };
+          return { text: t('Project Completed', { ns: 'custom' }), variant: 'default' };
         }
         if (worker.task_completed) {
-          return { text: t('workers.task_completed', { ns: 'custom' }), variant: 'warning' };
+          return { text: t('Task Completed', { ns: 'custom' }), variant: 'warning' };
         }
         if (worker.active) {
-          return { text: t('workers.active', { ns: 'custom' }), variant: 'success' };
+          return { text: t('Active', { ns: 'custom' }), variant: 'success' };
         }
-        return { text: t('workers.inactive', { ns: 'custom' }), variant: 'destructive' };
+        return { text: t('Inactive', { ns: 'custom' }), variant: 'destructive' };
       };
 
       const calculateTotalSalary = (worker) => {
@@ -216,14 +216,14 @@ import React, { useState, useEffect, useCallback } from 'react';
         <>
           <Helmet>
             <html lang={i18n.language} />
-            <title>{t('workers.title', { ns: 'custom' })} - DomusBuilder Hub</title>
-            <meta name="description" content={t('workers.description', { ns: 'custom' })} />
+            <title>{t('Worker Directory', { ns: 'custom' })} - DomusBuilder Hub</title>  
+            <meta name="description" content={t('Worker Directory', { ns: 'custom' })} />
           </Helmet>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('workers.title', { ns: 'custom' })}</h1>
-                <p className="text-muted-foreground mt-1">{t('workers.description', { ns: 'custom' })}</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('Worker Directory', { ns: 'custom' })}</h1>
+                <p className="text-muted-foreground mt-1">{t('Manage your workforce, track their status, and handle payroll.', { ns: 'custom' })}</p>
               </div>
               <div className="flex gap-2">
                 <AddWorkerDialog onUpdate={handleRefresh} />
@@ -236,32 +236,32 @@ import React, { useState, useEffect, useCallback } from 'react';
                 <Card className="bg-yellow-50 border-yellow-200">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle className="text-yellow-800 flex items-center gap-2"><Clock /> Pending Workers</CardTitle>
+                            <CardTitle className="text-yellow-800 flex items-center gap-2"><Clock /> {t('Pending Workers', { ns: 'custom' })}</CardTitle>
                             <CardDescription className="text-yellow-700">You have {stagedCount} worker(s) staged from a CSV import.</CardDescription>
                         </div>
                         <Button onClick={handleProcessStagedData} disabled={processing}>
                             {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                            Process Staged Data
+                            {t('Process Staged Data', { ns: 'custom' })}
                         </Button>
                     </CardHeader>
                 </Card>
             )}
 
             <Card>
-                <CardHeader><CardTitle>{t('workers.title', { ns: 'custom' })}</CardTitle></CardHeader>
+                <CardHeader><CardTitle>{t('Worker Directory', { ns: 'custom' })}</CardTitle></CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
                         <Table>
                             <TableHeader>
                             <TableRow>
-                                <TableHead>{t('workers.worker_code', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.full_name', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.trade', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.daily_rate', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.days_worked', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.total_salary', { ns: 'custom' })}</TableHead>
-                                <TableHead>{t('workers.status', { ns: 'custom' })}</TableHead>
-                                <TableHead className="text-right">{t('workers.actions', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Worker Code', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Full Name', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Trade', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Daily Rate', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Days Worked', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Total Salary', { ns: 'custom' })}</TableHead>
+                                <TableHead>{t('Status', { ns: 'custom' })}</TableHead>
+                                <TableHead className="text-right">{t('Actions', { ns: 'custom' })}</TableHead>
                             </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -305,11 +305,11 @@ import React, { useState, useEffect, useCallback } from 'react';
                                             <DropdownMenuContent align="end">
                                               <DropdownMenuItem onClick={() => handleEditClick(worker)}>
                                                 <Edit className="mr-2 h-4 w-4" />
-                                                <span>{t('materials.edit', { ns: 'custom' })}</span>
+                                                <span>{t('Edit', { ns: 'custom' })}</span>
                                               </DropdownMenuItem>
                                               <DropdownMenuItem onClick={() => handleDeleteClick(worker)} className="text-destructive">
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                <span>{t('workers.delete', { ns: 'custom' })}</span>
+                                                <span>{t('Delete', { ns: 'custom' })}</span>
                                               </DropdownMenuItem>
                                             </DropdownMenuContent>
                                           </DropdownMenu>

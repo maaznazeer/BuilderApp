@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -102,7 +102,6 @@ const PurchaseForm = ({ open, setOpen, purchase, onUpdate }) => {
         description: formData.description,
         quantity: Number(formData.quantity),
         unit_price: Number(formData.unit_price),
-        total_amount: Number(totalAmount),
         supplier_code: formData.supplier_code,
         project_code: formData.project_code || null,
         status: formData.status,
@@ -129,6 +128,9 @@ const PurchaseForm = ({ open, setOpen, purchase, onUpdate }) => {
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{purchase?.id ? 'Edit Material Purchase' : 'New Material Purchase'}</DialogTitle>
+          <DialogDescription>
+            Fill in purchase details below. Supplier is required; project is optional.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
             <div className="space-y-2"><Label htmlFor="date">Date</Label><Input id="date" type="date" value={formData.date || ''} onChange={handleChange} /></div>
@@ -146,7 +148,7 @@ const PurchaseForm = ({ open, setOpen, purchase, onUpdate }) => {
             <div className="space-y-2"><Label htmlFor="quantity">Quantity</Label><Input id="quantity" type="number" value={formData.quantity || ''} onChange={handleChange} min="1" /></div>
             <div className="space-y-2"><Label htmlFor="unit_price">Unit Price</Label><Input id="unit_price" type="number" value={formData.unit_price || ''} onChange={handleChange} min="0" step="0.01" /></div>
             <div className="space-y-2"><Label htmlFor="supplier_code">Supplier</Label><Select value={formData.supplier_code || ''} onValueChange={(v) => handleSelectChange('supplier_code', v)}><SelectTrigger><SelectValue placeholder="Select a supplier" /></SelectTrigger><SelectContent>{suppliers.map(s => <SelectItem key={s.supplier_code} value={s.supplier_code}>{s.supplier_name}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-2"><Label htmlFor="project_code">Project (Optional)</Label><Select value={formData.project_code || ''} onValueChange={(v) => handleSelectChange('project_code', v)}><SelectTrigger><SelectValue placeholder="Select a project" /></SelectTrigger><SelectContent><SelectItem value="">None</SelectItem>{projects.map(p => <SelectItem key={p.project_code} value={p.project_code}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label htmlFor="project_code">Project (Optional)</Label><Select value={formData.project_code || ''} onValueChange={(v) => handleSelectChange('project_code', v === 'none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Select a project" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{projects.map(p => <SelectItem key={p.project_code} value={p.project_code}>{p.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-2 md:col-span-2"><Label htmlFor="status">Status</Label><Select value={formData.status} onValueChange={(v) => handleSelectChange('status', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
             <div className="md:col-span-2 mt-2 p-3 bg-gray-100 rounded-md">
                 <Label>Total Amount</Label>

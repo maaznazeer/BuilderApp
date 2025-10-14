@@ -21,10 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
 
 const materialSchema = z.object({
-  project_code: z.string().min(1, 'Project is required.'),
+  project_id: z.string().min(1, 'Project is required.'),
   material: z.string().min(1, 'Material name is required.'),
   category: z.string().optional(),
-  supplier_code: z.string().optional(),
+  supplier_id: z.string().optional(),
   qty: z.preprocess((val) => Number(val), z.number().positive('Quantity must be positive.')),
   unit: z.string().optional(),
   unit_price: z.preprocess((val) => Number(val), z.number().nonnegative('Unit price cannot be negative.')),
@@ -32,13 +32,13 @@ const materialSchema = z.object({
 });
 
 const fetchProjects = async (userId) => {
-  const { data, error } = await supabase.from('projects').select('project_code, name').eq('owner_id', userId);
+  const { data, error } = await supabase.from('projects').select('id, name').eq('owner_uuid', userId);
   if (error) throw new Error(error.message);
   return data;
 };
 
 const fetchSuppliers = async () => {
-  const { data, error } = await supabase.from('suppliers').select('supplier_code, supplier_name');
+  const { data, error } = await supabase.from('suppliers').select('id, supplier_name');
   if (error) throw new Error(error.message);
   return data;
 };
@@ -62,10 +62,18 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
 
   const addMaterialMutation = useMutation(
     async (newMaterial) => {
-      const { data, error } = await supabase.from('materials_inventory').insert({
-        ...newMaterial,
-        remaining_stock: newMaterial.qty,
-      }).select();
+      const insertPayload = {
+        name: newMaterial.material,
+        project_id: newMaterial.project_id,
+        supplier_id: newMaterial.supplier_id ? newMaterial.supplier_id : null,
+        unit_cost: typeof newMaterial.unit_price === 'number' ? newMaterial.unit_price : Number(newMaterial.unit_price) || null,
+        quantity: typeof newMaterial.qty === 'number' ? newMaterial.qty : Number(newMaterial.qty) || null,
+      };
+
+      const { data, error } = await supabase
+        .from('materials')
+        .insert(insertPayload)
+        .select();
 
       if (error) throw new Error(error.message);
       return data;
@@ -105,9 +113,9 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="project_code" className="text-right">Project</Label>
+            <Label htmlFor="project_id" className="text-right">Project</Label>
             <Controller
-              name="project_code"
+              name="project_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -119,7 +127,7 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
                       <SelectItem value="loading" disabled>Loading projects...</SelectItem>
                     ) : (
                       projects?.map((project) => (
-                        <SelectItem key={project.project_code} value={project.project_code}>
+                        <SelectItem key={project.id} value={String(project.id)}>
                           {project.name}
                         </SelectItem>
                       ))
@@ -128,7 +136,7 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
                 </Select>
               )}
             />
-             {errors.project_code && <p className="col-span-4 text-red-500 text-xs text-right">{errors.project_code.message}</p>}
+             {errors.project_id && <p className="col-span-4 text-red-500 text-xs text-right">{errors.project_id.message}</p>}
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
@@ -143,9 +151,9 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="supplier_code" className="text-right">Supplier</Label>
+            <Label htmlFor="supplier_id" className="text-right">Supplier</Label>
             <Controller
-              name="supplier_code"
+              name="supplier_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -157,7 +165,7 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
                       <SelectItem value="loading" disabled>Loading suppliers...</SelectItem>
                     ) : (
                       suppliers?.map((supplier) => (
-                        <SelectItem key={supplier.supplier_code} value={supplier.supplier_code}>
+                        <SelectItem key={supplier.id} value={String(supplier.id)}>
                           {supplier.supplier_name}
                         </SelectItem>
                       ))
@@ -186,10 +194,10 @@ const AddMaterialDialog = ({ isOpen, onClose }) => {
             {errors.unit_price && <p className="text-red-500 text-xs">{errors.unit_price.message}</p>}
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" {...register('notes')} />
-          </div>
+          </div> */}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={addMaterialMutation.isLoading}>

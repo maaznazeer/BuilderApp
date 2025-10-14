@@ -109,22 +109,22 @@ const EditWorkerDialog = ({ worker, open, onOpenChange, onUpdate }) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('workers.edit_worker_title')}</DialogTitle>
+          <DialogTitle>{t('Edit Worker')}</DialogTitle>
           <DialogDescription>{t('workers.edit_worker_desc', { name: `${worker.first_name} ${worker.surname}` })}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">{t('workers.first_name')}</Label>
+              <Label htmlFor="first_name">{t('First Name')}</Label>
               <Input id="first_name" name="first_name" value={formData.first_name} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="surname">{t('workers.surname')}</Label>
+              <Label htmlFor="surname">{t('Surname')}</Label>
               <Input id="surname" name="surname" value={formData.surname} onChange={handleChange} required />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="trade">{t('workers.trade')}</Label>
+            <Label htmlFor="trade">{t('Trade')}</Label>
             <Select onValueChange={(value) => handleSelectChange('trade', value)} value={formData.trade}>
               <SelectTrigger>
                 <SelectValue placeholder="Select trade" />
@@ -138,16 +138,16 @@ const EditWorkerDialog = ({ worker, open, onOpenChange, onUpdate }) => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="daily_rate">{t('workers.daily_rate')}</Label>
+              <Label htmlFor="daily_rate">{t('Daily Rate')}</Label>
               <Input id="daily_rate" name="daily_rate" type="number" value={formData.daily_rate} onChange={handleChange} />
             </div>
              <div className="space-y-2">
-              <Label htmlFor="days_worked">{t('workers.days_worked_label')}</Label>
+              <Label htmlFor="days_worked">{t('Days Worked')}</Label>
               <Input id="days_worked" name="days_worked" type="number" value={formData.days_worked} onChange={handleChange} />
             </div>
           </div>
            <div className="space-y-2">
-              <Label htmlFor="currency">{t('workers.currency')}</Label>
+              <Label htmlFor="currency">{t('Currency')}</Label>
               <Select onValueChange={(value) => handleSelectChange('currency', value)} value={formData.currency}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
@@ -162,21 +162,21 @@ const EditWorkerDialog = ({ worker, open, onOpenChange, onUpdate }) => {
           <div className="space-y-3 pt-2">
             <div className="flex items-center space-x-2">
               <Switch id="active" checked={formData.active} onCheckedChange={(checked) => handleSwitchChange('active', checked)} />
-              <Label htmlFor="active">{t('workers.active')}</Label>
+              <Label htmlFor="active">{t('Active')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch id="task_completed" checked={formData.task_completed} onCheckedChange={(checked) => handleSwitchChange('task_completed', checked)} />
-              <Label htmlFor="task_completed">{t('workers.task_completed')}</Label>
+              <Label htmlFor="task_completed">{t('Task Completed')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch id="project_completed" checked={formData.project_completed} onCheckedChange={(checked) => handleSwitchChange('project_completed', checked)} />
-              <Label htmlFor="project_completed">{t('workers.project_completed')}</Label>
+              <Label htmlFor="project_completed">{t('Project Completed')}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('materials.cancel')}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
             <Button type="submit" disabled={loading}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('workers.saving')}</> : t('workers.save_changes')}
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('Saving')}</> : t('Save Changes')}
             </Button>
           </DialogFooter>
         </form>

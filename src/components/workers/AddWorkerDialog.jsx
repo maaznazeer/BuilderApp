@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
@@ -31,8 +31,18 @@ const AddWorkerDialog = ({ onUpdate }) => {
     daily_rate: '',
     currency: 'USD',
     active: true,
+    days_worked: '',
   });
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase.from('projects').select('id, name').order('name', { ascending: true });
+      if (!error) setProjects(data || []);
+    };
+    if (open) fetchProjects();
+  }, [open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,14 +70,21 @@ const AddWorkerDialog = ({ onUpdate }) => {
 
     const workerCode = generateWorkerCode(formData.first_name, formData.surname);
 
+    const payload = {
+      first_name: formData.first_name,
+      surname: formData.surname,
+      trade: formData.trade,
+      worker_code: workerCode,
+      currency: formData.currency,
+      active: !!formData.active,
+      daily_rate: formData.daily_rate ? parseFloat(formData.daily_rate) : null,
+      days_worked: formData.days_worked === '' ? null : parseInt(formData.days_worked, 10),
+    };
+
     const { error } = await supabase
       .from('workers')
       .insert([
-        {
-          ...formData,
-          worker_code: workerCode,
-          daily_rate: formData.daily_rate ? parseFloat(formData.daily_rate) : null,
-        }
+        payload
       ]);
 
     setLoading(false);
@@ -84,6 +101,7 @@ const AddWorkerDialog = ({ onUpdate }) => {
         daily_rate: '',
         currency: 'USD',
         active: true,
+        days_worked: '',
       });
     }
   };
@@ -91,35 +109,35 @@ const AddWorkerDialog = ({ onUpdate }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>{t('workers.add_worker')}</Button>
+        <Button>{t('Add Worker')}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('workers.add_worker_title')}</DialogTitle>
-          <DialogDescription>{t('workers.add_worker_desc')}</DialogDescription>
+          <DialogTitle>{t('Add Worker')}</DialogTitle>
+          <DialogDescription>{t('Add a new worker to the database')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">{t('workers.first_name')}</Label>
+              <Label htmlFor="first_name">{t('First Name')}</Label>
               <Input id="first_name" name="first_name" value={formData.first_name} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="surname">{t('workers.surname')}</Label>
+              <Label htmlFor="surname">{t('Surname')}</Label>
               <Input id="surname" name="surname" value={formData.surname} onChange={handleChange} required />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="trade">{t('workers.trade')}</Label>
+            <Label htmlFor="trade">{t('Trade')}</Label>
             <Input id="trade" name="trade" value={formData.trade} onChange={handleChange} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="daily_rate">{t('workers.daily_rate')}</Label>
+              <Label htmlFor="daily_rate">{t('Daily Rate')}</Label>
               <Input id="daily_rate" name="daily_rate" type="number" value={formData.daily_rate} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency">{t('workers.currency')}</Label>
+              <Label htmlFor="currency">{t('Currency')}</Label>
               <Select onValueChange={handleCurrencyChange} defaultValue={formData.currency}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
@@ -132,14 +150,37 @@ const AddWorkerDialog = ({ onUpdate }) => {
               </Select>
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="days_worked">{t('Days Worked')}</Label>
+              <Input id="days_worked" name="days_worked" type="number" value={formData.days_worked} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              {/* <Label htmlFor="project_id">{t('Project')}</Label> */}
+              {/* <Select
+                value={formData.project_id ? String(formData.project_id) : 'none'}
+                onValueChange={(v) => setFormData(prev => ({ ...prev, project_id: v === 'none' ? null : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select a project')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('None')}</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select> */}
+            </div>
+          </div>
           <div className="flex items-center space-x-2">
             <Switch id="active" checked={formData.active} onCheckedChange={handleSwitchChange} />
-            <Label htmlFor="active">{t('workers.active')}</Label>
+            <Label htmlFor="active">{t('Active')}</Label>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('materials.cancel')}</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('Cancel')}</Button>
             <Button type="submit" disabled={loading}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('workers.adding')}</> : t('workers.add_worker')}
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('Adding')}</> : t('Add Worker')}
             </Button>
           </DialogFooter>
         </form>
