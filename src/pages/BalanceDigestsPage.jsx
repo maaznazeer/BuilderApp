@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useBalanceDigests, useGenerateBalanceDigest } from '@/hooks/useBalanceDigests';
 import {
   Table,
   TableBody,
@@ -12,39 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Loader2, Calendar } from 'lucide-react';
+import { DollarSign, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 
 const BalanceDigestsPage = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [digests, setDigests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: digests, isLoading: loading } = useBalanceDigests();
+  const generateDigestMutation = useGenerateBalanceDigest();
 
-  const fetchBalanceDigests = useCallback(async () => {
-    setLoading(true);
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('balance_digests')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('as_of', { ascending: false });
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'Error fetching balance digests', description: error.message });
-    } else {
-      setDigests(data || []);
-    }
-    setLoading(false);
-  }, [user, toast]);
-
-  useEffect(() => {
-    fetchBalanceDigests();
-  }, [fetchBalanceDigests]);
+  // Debug logging
+  console.log('BalanceDigestsPage - digests:', digests);
+  console.log('BalanceDigestsPage - loading:', loading);
 
   return (
     <>
@@ -71,12 +46,32 @@ const BalanceDigestsPage = () => {
             whileTap={{ scale: 0.95 }}
             className="group"
           >
-            <button
-              onClick={() => toast({ title: '🚧 This feature isn\'t implemented yet—but don\'t worry! You can request it in your next prompt! 🚀' })}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-            >
-              <Calendar className="mr-2 h-4 w-4" /> Generate New Digest
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => generateDigestMutation.mutate()}
+                disabled={generateDigestMutation.isLoading}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              >
+                {generateDigestMutation.isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" /> Generate New Digest
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('balance_digests');
+                  window.location.reload();
+                }}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-4 py-2"
+              >
+                Clear Data
+              </button>
+            </div>
           </motion.div>
         </div>
 

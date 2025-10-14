@@ -25,7 +25,7 @@ import React, { useState, useEffect } from 'react';
       
       return (
         <div className="grid min-h-screen w-full grid-cols-[auto_1fr]">
-          <div className="h-screen">
+          <div className="h-full min-h-screen">
             <Sidebar 
               isCollapsed={isSidebarCollapsed} 
               toggleSidebar={toggleSidebar} 

@@ -36,9 +36,9 @@ const MainDashboard = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className=" flex flex-col overflow-hidden">
       <motion.div 
-        className="flex-1 flex flex-col space-y-4 p-6"
+        // className="flex-1 flex flex-col space-y-4 p-6"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -54,7 +54,7 @@ const MainDashboard = () => {
         </motion.div>
         
         {/* Strategic Overview - Takes remaining space */}
-        <motion.div variants={itemVariants} className="flex-1 min-h-0">
+        <motion.div variants={itemVariants} className="">
           <StrategicOverview />
         </motion.div>
       </motion.div>

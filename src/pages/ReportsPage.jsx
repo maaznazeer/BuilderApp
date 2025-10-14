@@ -8,10 +8,10 @@ import { Zap, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ReportsPage = () => {
-    const { projectIds, hasFeature } = useDashboard();
+    const { projectIds, plan } = useDashboard();
     const navigate = useNavigate();
 
-    const canViewAdvancedReports = hasFeature('advanced_reports');
+    const canViewAdvancedReports = plan === 'premium' || plan === 'enterprise';
     
     if (!canViewAdvancedReports) {
         return (

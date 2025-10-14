@@ -14,7 +14,7 @@ export function Toaster() {
 
 	return (
 		<ToastProvider>
-			{toasts.map(({ id, title, description, action, ...props }) => {
+			{toasts.map(({ id, title, description, action, dismiss, ...props }) => {
 				return (
 					<Toast key={id} {...props} role="status" aria-live="polite">
 						<div className="grid gap-1">

@@ -16,7 +16,7 @@ import React from 'react';
         const navItems = getSidebarNavItems(profile, onFaqOpen);
     
         return (
-            <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-primary-foreground">
+            <div className="flex flex-col h-full min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-primary-foreground">
                 <div className={cn("flex h-14 items-center border-b border-slate-700 px-4 lg:h-[60px] shrink-0", isCollapsed ? "justify-center px-2" : "lg:px-6")}>
                     <Link to="/dashboard" className="flex items-baseline space-x-1 flex-shrink-0">
                         <span className="font-poppins text-xl font-bold text-white">D</span>
@@ -104,7 +104,7 @@ import React from 'react';
                 initial={false}
                 animate={isCollapsed ? "collapsed" : "expanded"}
                 variants={sidebarVariants}
-                className={cn("flex flex-col h-full border-r bg-gradient-to-b from-slate-900 to-slate-800 text-primary-foreground z-40 relative")}
+                className={cn("flex flex-col h-full min-h-screen border-r bg-gradient-to-b from-slate-900 to-slate-800 text-primary-foreground z-40 relative")}
             >
                 <SidebarContent isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} onFaqOpen={onFaqOpen} />
             </motion.div>

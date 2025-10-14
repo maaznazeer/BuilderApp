@@ -163,7 +163,7 @@ const StrategicOverview = () => {
     }
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col space-y-4">
             <h2 className="text-xl font-bold text-foreground mb-3 flex-shrink-0">Strategic Overview</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-h-0">
                 {widgets.map((widget, i) => (

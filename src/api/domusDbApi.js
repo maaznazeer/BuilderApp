@@ -95,8 +95,20 @@ export const domusDbApi = {
         if (error) throw error;
         return data;
     },
-    getBalanceDigests: async () => {
-        const { data, error } = await supabase.from('balance_digests').select('*');
+    getBalanceDigests: async (userId) => {
+        const { data, error } = await supabase
+            .from('balance_digests')
+            .select('*')
+            .eq('user_id', userId)
+            .order('as_of', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    createBalanceDigest: async (digestData) => {
+        const { data, error } = await supabase
+            .from('balance_digests')
+            .insert(digestData)
+            .select();
         if (error) throw error;
         return data;
     },
