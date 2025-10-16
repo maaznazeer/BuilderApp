@@ -8,8 +8,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import KanbanBoard from '@/components/dashboard/planner/KanbanBoard.jsx';
 import CalendarView from '@/components/dashboard/planner/CalendarView.jsx';
+import { useToast } from '@/components/ui/use-toast';
+import { useQueryClient } from 'react-query';
+import { supabase } from '@/lib/customSupabaseClient';
 
-const EmptyState = () => (
+const EmptyState = ({ onAddTask }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -24,8 +27,8 @@ const EmptyState = () => (
                 <CardTitle className="text-2xl font-bold pt-4">Your Planner is Empty</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground mb-6">Create tasks within your projects to see them here.</p>
-                <Button disabled>
+                <p className="text-muted-foreground mb-6">Create tasks to organize your work and track progress.</p>
+                <Button onClick={onAddTask}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add a New Task
                 </Button>
@@ -37,6 +40,42 @@ const EmptyState = () => (
 const PlannerTab = () => {
     const { data: tasks, isLoading, error } = usePlannerTasks();
     const [view, setView] = useState('kanban');
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const handleAddTask = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('planner_tasks')
+                .insert([
+                    {
+                        title: 'New Task',
+                        description: 'Click to edit this task',
+                        status: 'Backlog',
+                        priority: 'Medium',
+                        due_date: null,
+                        assignee: null,
+                        project_id: null
+                    }
+                ])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            await queryClient.invalidateQueries('plannerTasks');
+            toast({
+                title: 'Task Created!',
+                description: 'A new task has been added to your planner.',
+            });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Failed to create task. Please try again.',
+                variant: 'destructive',
+            });
+        }
+    };
 
     if (error) {
         return <div className="text-red-500">Error loading tasks: {error.message}</div>;
@@ -51,18 +90,24 @@ const PlannerTab = () => {
         >
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Planner</h2>
-                <Tabs value={view} onValueChange={setView} className="w-auto">
-                    <TabsList>
-                        <TabsTrigger value="kanban"><LayoutGrid className="w-4 h-4 mr-2" />Kanban</TabsTrigger>
-                        <TabsTrigger value="calendar"><CalendarDays className="w-4 h-4 mr-2" />Calendar</TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                <div className="flex items-center gap-4">
+                    <Button onClick={handleAddTask} className="flex items-center gap-2">
+                        <PlusCircle className="w-4 h-4" />
+                        Add Task
+                    </Button>
+                    <Tabs value={view} onValueChange={setView} className="w-auto">
+                        <TabsList>
+                            <TabsTrigger value="kanban"><LayoutGrid className="w-4 h-4 mr-2" />Kanban</TabsTrigger>
+                            <TabsTrigger value="calendar"><CalendarDays className="w-4 h-4 mr-2" />Calendar</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
             </div>
 
             {isLoading ? (
                 <Skeleton className="h-[600px] w-full" />
             ) : !tasks || tasks.length === 0 ? (
-                <EmptyState />
+                <EmptyState onAddTask={handleAddTask} />
             ) : (
                 <>
                     {view === 'kanban' && <KanbanBoard tasks={tasks} />}

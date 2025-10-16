@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+    import { DndProvider } from 'react-dnd';
+    import { HTML5Backend } from 'react-dnd-html5-backend';
     import { supabase } from '@/lib/customSupabaseClient';
     import { useToast } from "@/components/ui/use-toast";
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -122,65 +124,67 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         }
     
         return (
-            <div className="space-y-4">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-white rounded-lg shadow-sm border">
-                    <Select value={selectedProject || ''} onValueChange={setSelectedProject} disabled={projects.length === 0}>
-                        <SelectTrigger className="w-[200px] bg-white"><SelectValue placeholder="Select a project" /></SelectTrigger>
-                        <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" onClick={() => setCurrentDate(subDays(currentDate, 7))}><ChevronLeft className="h-4 w-4" /></Button>
-                        <span className="text-sm font-medium">{format(weekInterval.start, 'MMM d')} - {format(weekInterval.end, 'MMM d, yyyy')}</span>
-                        <Button variant="outline" size="icon" onClick={() => setCurrentDate(addDays(currentDate, 7))}><ChevronRight className="h-4 w-4" /></Button>
+            <DndProvider backend={HTML5Backend}>
+                <div className="space-y-4">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-white rounded-lg shadow-sm border">
+                        <Select value={selectedProject || ''} onValueChange={setSelectedProject} disabled={projects.length === 0}>
+                            <SelectTrigger className="w-[200px] bg-white"><SelectValue placeholder="Select a project" /></SelectTrigger>
+                            <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" onClick={() => setCurrentDate(subDays(currentDate, 7))}><ChevronLeft className="h-4 w-4" /></Button>
+                            <span className="text-sm font-medium">{format(weekInterval.start, 'MMM d')} - {format(weekInterval.end, 'MMM d, yyyy')}</span>
+                            <Button variant="outline" size="icon" onClick={() => setCurrentDate(addDays(currentDate, 7))}><ChevronRight className="h-4 w-4" /></Button>
+                        </div>
                     </div>
+
+                    {loading ? (
+                        <div className="p-4 bg-white rounded-lg border shadow-sm"><Skeleton className="h-12 w-full mb-2" /><Skeleton className="h-16 w-full mb-1" /><Skeleton className="h-16 w-full mb-1" /><Skeleton className="h-16 w-full" /></div>
+                    ) : !selectedProject ? (
+                         <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed">
+                            <h3 className="text-lg font-semibold text-gray-800">No Project Selected</h3>
+                            <p className="text-gray-500 mt-2">Please select a project to view its workload.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto bg-white rounded-lg border shadow-sm">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="sticky left-0 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10 w-48">Resource</th>
+                                        {weekDays.map(day => (<th key={day.toISOString()} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{format(day, 'EEE')} <br /> {format(day, 'd')}</th>))}
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {resources.map(resource => {
+                                        const calendar = resource.resource_calendars;
+                                        const capacity = calendar?.daily_hours || 8;
+                                        const workDays = calendar?.work_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+                                        
+                                        return (
+                                            <tr key={resource.resource_id}>
+                                                <td className="sticky left-0 bg-white px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-48 z-10">{resource.resource_name}</td>
+                                                {weekDays.map(day => {
+                                                    const dayStr = format(day, 'yyyy-MM-dd'); const dayName = format(day, 'Eee');
+                                                    const isWorkDay = workDays.includes(dayName); const dayData = workloadData[resource.resource_id]?.[dayStr];
+                                                    const dayCapacity = isWorkDay ? capacity : 0;
+                                                    const percentage = dayCapacity > 0 ? (dayData.allocatedHours / dayCapacity) * 100 : (dayData.allocatedHours > 0 ? 999 : 0);
+                                                    
+                                                    return (
+                                                        <DroppableCell key={dayStr} resourceId={resource.resource_id} onDrop={handleDrop} className={`p-2 border-l ${isWorkDay ? getWorkloadColor(percentage) : 'bg-gray-200'} min-w-[120px]`}>
+                                                            <div className="text-xs font-bold mb-1 text-center">{Math.round(dayData.allocatedHours)}h / {dayCapacity}h ({Math.round(percentage)}%)</div>
+                                                            <div className="space-y-1">{dayData?.tasks?.map(task => (<DraggableTask key={task.task_id} task={task} />))}</div>
+                                                        </DroppableCell>
+                                                    );
+                                                })}
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-    
-                {loading ? (
-                    <div className="p-4 bg-white rounded-lg border shadow-sm"><Skeleton className="h-12 w-full mb-2" /><Skeleton className="h-16 w-full mb-1" /><Skeleton className="h-16 w-full mb-1" /><Skeleton className="h-16 w-full" /></div>
-                ) : !selectedProject ? (
-                     <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed">
-                        <h3 className="text-lg font-semibold text-gray-800">No Project Selected</h3>
-                        <p className="text-gray-500 mt-2">Please select a project to view its workload.</p>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto bg-white rounded-lg border shadow-sm">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="sticky left-0 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10 w-48">Resource</th>
-                                    {weekDays.map(day => (<th key={day.toISOString()} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{format(day, 'EEE')} <br /> {format(day, 'd')}</th>))}
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {resources.map(resource => {
-                                    const calendar = resource.resource_calendars;
-                                    const capacity = calendar?.daily_hours || 8;
-                                    const workDays = calendar?.work_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-                                    
-                                    return (
-                                        <tr key={resource.resource_id}>
-                                            <td className="sticky left-0 bg-white px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-48 z-10">{resource.resource_name}</td>
-                                            {weekDays.map(day => {
-                                                const dayStr = format(day, 'yyyy-MM-dd'); const dayName = format(day, 'Eee');
-                                                const isWorkDay = workDays.includes(dayName); const dayData = workloadData[resource.resource_id]?.[dayStr];
-                                                const dayCapacity = isWorkDay ? capacity : 0;
-                                                const percentage = dayCapacity > 0 ? (dayData.allocatedHours / dayCapacity) * 100 : (dayData.allocatedHours > 0 ? 999 : 0);
-                                                
-                                                return (
-                                                    <DroppableCell key={dayStr} resourceId={resource.resource_id} onDrop={handleDrop} className={`p-2 border-l ${isWorkDay ? getWorkloadColor(percentage) : 'bg-gray-200'} min-w-[120px]`}>
-                                                        <div className="text-xs font-bold mb-1 text-center">{Math.round(dayData.allocatedHours)}h / {dayCapacity}h ({Math.round(percentage)}%)</div>
-                                                        <div className="space-y-1">{dayData?.tasks?.map(task => (<DraggableTask key={task.task_id} task={task} />))}</div>
-                                                    </DroppableCell>
-                                                );
-                                            })}
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+            </DndProvider>
         );
     };
     

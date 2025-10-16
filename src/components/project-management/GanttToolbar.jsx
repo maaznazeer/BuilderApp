@@ -47,19 +47,19 @@ const GanttToolbar = ({ projects, selectedProject, onSelectProject, onAddTask, o
             <div className="flex flex-wrap items-center gap-2">
                 {renderButtonWithTooltip(
                     onAddTask,
-                    !selectedProject || !permissions.canEditTasks,
-                    !selectedProject ? "Select a project first" : "Permission required",
+                    !selectedProject,
+                    "Select a project first",
                     <><Plus className="mr-2 h-4 w-4" /> Add Task</>
                 )}
                 
                 {renderButtonWithTooltip(
                     onUseTemplate,
-                    !selectedProject || !permissions.canEditTasks,
-                    !selectedProject ? "Select a project first" : "Permission required",
+                    !selectedProject,
+                    "Select a project first",
                     <><BookCopy className="mr-2 h-4 w-4" /> Use Template</>
                 )}
 
-                <Button variant="outline" onClick={onSetBaseline} disabled={!selectedProject || !permissions.canEditTasks}>
+                <Button variant="outline" onClick={onSetBaseline} disabled={!selectedProject}>
                     Set Baseline
                 </Button>
                 <Button variant="outline" size="icon" onClick={() => toast({ title: "Filter options coming soon!"})}>

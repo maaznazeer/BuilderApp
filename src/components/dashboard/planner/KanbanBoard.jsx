@@ -121,7 +121,7 @@ const KanbanBoard = ({ tasks: initialTasks }) => {
             }));
             
             const { error } = await supabase
-                .from('tasks')
+                .from('planner_tasks')
                 .update({ status: overColumn, completed: overColumn === 'Done' })
                 .eq('id', activeId);
             

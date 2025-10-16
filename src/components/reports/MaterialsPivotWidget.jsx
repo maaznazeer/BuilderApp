@@ -174,8 +174,13 @@ const MaterialsPivotWidget = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      No results found for the selected filters.
+                    <TableCell colSpan={9} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <div className="text-muted-foreground mb-2">No materials data available</div>
+                        <div className="text-sm text-muted-foreground">
+                          Start by adding materials to your projects to see reports here.
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

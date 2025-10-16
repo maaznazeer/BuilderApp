@@ -90,10 +90,10 @@ const AddResourceDialog = ({ isOpen, onClose, onSave, resource, calendars }) => 
                     )}
                     <div className="space-y-2">
                         <Label>Calendar</Label>
-                         <Select value={calendarId || ''} onValueChange={(val) => setCalendarId(val || null)}>
+                         <Select value={calendarId || 'default'} onValueChange={(val) => setCalendarId(val === 'default' ? null : val)}>
                             <SelectTrigger><SelectValue placeholder="Default Calendar" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">Default Calendar</SelectItem>
+                                <SelectItem value="default">Default Calendar</SelectItem>
                                 {calendars.map(c => <SelectItem key={c.calendar_id} value={c.calendar_id}>{c.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
