@@ -13,7 +13,7 @@ import { Loader2, CalendarPlus as CalendarIcon, ChevronDown, ChevronUp } from 'l
 import { format, startOfMonth } from 'date-fns';
 
 const PayrollGridWidget = () => {
-    const { t } = useTranslation(['custom']);
+    const { t } = useTranslation();
     const { toast } = useToast();
     const { projects, loading: projectsLoading } = useProject();
     

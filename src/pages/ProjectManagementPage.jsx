@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import BudgetView from '@/components/project-management/BudgetView.jsx';
     import TimeAndReportsView from '@/components/project-management/TimeAndReportsView.jsx';
     import ProjectMaterialsPage from '@/pages/ProjectMaterialsPage.jsx';
-    import PayrollGridWidget from '@/components/payroll/PayrollGridWidget.jsx';
+    import PayrollView from '@/components/project-management/PayrollView.jsx';
 import { GanttChartSquare, Users, CalendarDays, BarChart3, Wallet, Clock, Package, Banknote } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
@@ -54,7 +54,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
         ] : [
             { value: 'gantt', label: t('Gantt'), icon: GanttChartSquare, component: <GanttView {...commonProps} /> },
             { value: 'materials', label: t('Materials'), icon: Package, component: <ProjectMaterialsPage {...commonProps} /> },
-            { value: 'payroll', label: t('Payroll'), icon: Banknote, component: <PayrollGridWidget {...commonProps} /> },
+            { value: 'payroll', label: t('Payroll'), icon: Banknote, component: <PayrollView {...commonProps} /> },
             { value: 'resources', label: t('Resources'), icon: Users, component: <ResourcesView {...commonProps} /> },
             { value: 'calendars', label: t('Calendars'), icon: CalendarDays, component: <CalendarsView {...commonProps} /> },
             { value: 'workload', label: t('Workload'), icon: BarChart3, component: <WorkloadView {...commonProps} /> },

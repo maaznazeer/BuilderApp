@@ -54,5 +54,23 @@
     "no_account": "Don't have an account?",
     "signup_link": "Sign up here",
     "loading": "Logging in..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "no_data": "No data to display.",
+    "refresh": "Refresh"
+  },
+  "payroll": {
+    "payslip": {
+      "title": "Payslip Generator",
+      "description": "Generate payslips for workers",
+      "select_project": "Select Project",
+      "select_worker": "Select Worker",
+      "generate_button": "Generate Payslip",
+      "fetch_workers_error": "Error fetching workers",
+      "missing_params_error": "Please select project, worker, and month",
+      "generate_success": "Payslip Generated",
+      "generate_error": "Error generating payslip"
+    }
   }
 }

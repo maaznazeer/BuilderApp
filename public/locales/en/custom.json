@@ -107,7 +107,56 @@
     "confirm": "Confirm"
   },
   "common": {
-    "no_data": "No data to display."
+    "no_data": "No data to display.",
+    "loading": "Loading...",
+    "refresh": "Refresh"
+  },
+  "payroll": {
+    "page_title": "Payroll Management",
+    "page_description": "Manage payroll, track payments, and generate reports for your workforce.",
+    "header": "Payroll Management",
+    "subheader": "Manage payroll, track payments, and generate reports for your workforce.",
+    "tabs": {
+      "management": "Management",
+      "summary": "Summary",
+      "grid": "Grid",
+      "payslips": "Payslips",
+      "workers": "Workers",
+      "import": "Import",
+      "payments": "Payments"
+    },
+    "trade_summary": {
+      "title": "Trade Summary",
+      "description": "Summary of payroll by trade for the selected month",
+      "select_project": "Select Project",
+      "only_approved": "Only Approved",
+      "trade": "Trade",
+      "total_due": "Total Due",
+      "total_paid": "Total Paid",
+      "variance": "Variance",
+      "fetch_error": "Error fetching trade summary"
+    },
+    "grid": {
+      "title": "Payroll Grid",
+      "description": "Detailed payroll breakdown by worker and time period",
+      "select_project": "Select Project",
+      "worker": "Worker",
+      "month_due": "Month Due",
+      "month_paid": "Month Paid",
+      "month_balance": "Month Balance",
+      "fetch_error": "Error fetching payroll data"
+    },
+    "payslip": {
+      "title": "Payslip Generator",
+      "description": "Generate payslips for workers",
+      "select_project": "Select Project",
+      "select_worker": "Select Worker",
+      "generate_button": "Generate Payslip",
+      "fetch_workers_error": "Error fetching workers",
+      "missing_params_error": "Please select project, worker, and month",
+      "generate_success": "Payslip Generated",
+      "generate_error": "Error generating payslip"
+    }
   },
   "settings": {
     "project": {
