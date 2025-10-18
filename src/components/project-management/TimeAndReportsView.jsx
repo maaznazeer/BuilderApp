@@ -10,8 +10,12 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { format } from 'date-fns';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { useProjectManagementPermissions } from '@/hooks/useProjectManagementPermissions';
-    import { EyeOff, Timer, BarChart } from 'lucide-react';
+    import { usePlannerWorkflow } from '@/hooks/usePlannerWorkflow';
+    import { EyeOff, Timer, BarChart, DollarSign, Package, Users } from 'lucide-react';
     import ReportsView from './ReportsView';
+    import TaskCostReport from './reports/TaskCostReport';
+    import MaterialUsageReport from './reports/MaterialUsageReport';
+    import LaborEfficiencyReport from './reports/LaborEfficiencyReport';
     
     const TimeLogHistory = ({ timeLogs, loading }) => {
         return (
@@ -67,6 +71,16 @@ import React, { useState, useEffect, useCallback } from 'react';
         const [timeLogs, setTimeLogs] = useState([]);
         const [loading, setLoading] = useState(false);
         const permissions = useProjectManagementPermissions();
+        
+        // Use the planner workflow hook for comprehensive data
+        const {
+            tasks,
+            taskMaterials,
+            timeLogs: workflowTimeLogs,
+            payrollEntries,
+            taskAssignments,
+            loading: workflowLoading
+        } = usePlannerWorkflow(selectedProject);
     
         const fetchTimeLogs = useCallback(async () => {
             if (!selectedProject || !permissions.canLogTime) {
@@ -115,15 +129,24 @@ import React, { useState, useEffect, useCallback } from 'react';
                             <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                         <SelectContent>
-                            {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                            {projects.map(p => {
+                                const projectId = p.id || p.project_id;
+                                return <SelectItem key={projectId} value={projectId}>{p.name}</SelectItem>;
+                            })}
                         </SelectContent>
                     </Select>
                 </div>
     
                 <Tabs defaultValue={permissions.canRunReports ? "reports" : "time-history"} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="reports" disabled={!permissions.canRunReports}>
                             <BarChart className="mr-2 h-4 w-4" /> Reports
+                        </TabsTrigger>
+                        <TabsTrigger value="task-costs" disabled={!permissions.canRunReports}>
+                            <DollarSign className="mr-2 h-4 w-4" /> Task Costs
+                        </TabsTrigger>
+                        <TabsTrigger value="materials" disabled={!permissions.canRunReports}>
+                            <Package className="mr-2 h-4 w-4" /> Materials
                         </TabsTrigger>
                         <TabsTrigger value="time-history" disabled={!permissions.canLogTime}>
                             <Timer className="mr-2 h-4 w-4" /> Time History
@@ -133,6 +156,32 @@ import React, { useState, useEffect, useCallback } from 'react';
                        {permissions.canRunReports ? (
                             <ReportsView projects={projects} selectedProject={selectedProject} setSelectedProject={setSelectedProject} />
                         ) : <p>You do not have permissions to view reports.</p>}
+                    </TabsContent>
+                    <TabsContent value="task-costs" className="mt-4">
+                       {permissions.canRunReports ? (
+                            <div className="space-y-6">
+                                <TaskCostReport 
+                                    tasks={tasks}
+                                    timeLogs={workflowTimeLogs}
+                                    taskMaterials={taskMaterials}
+                                    payrollEntries={payrollEntries}
+                                />
+                                <LaborEfficiencyReport 
+                                    timeLogs={workflowTimeLogs}
+                                    taskAssignments={taskAssignments}
+                                    tasks={tasks}
+                                    payrollEntries={payrollEntries}
+                                />
+                            </div>
+                        ) : <p>You do not have permissions to view task cost reports.</p>}
+                    </TabsContent>
+                    <TabsContent value="materials" className="mt-4">
+                       {permissions.canRunReports ? (
+                            <MaterialUsageReport 
+                                taskMaterials={taskMaterials}
+                                tasks={tasks}
+                            />
+                        ) : <p>You do not have permissions to view material reports.</p>}
                     </TabsContent>
                     <TabsContent value="time-history" className="mt-4">
                        {permissions.canLogTime ? (

@@ -20,10 +20,11 @@ import React, { useState, useEffect, useCallback } from 'react';
         const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
         const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
         const [taskToLog, setTaskToLog] = useState(null);
-        const [activeTimer, setActiveTimer] = useState(null); // { taskId, startTime }
-        const { toast } = useToast();
-        const { profile } = useAuth();
-        const permissions = useProjectManagementPermissions();
+    const [activeTimer, setActiveTimer] = useState(null); // { taskId, startTime }
+    const [filters, setFilters] = useState({ status: [], milestone: false });
+    const { toast } = useToast();
+    const { profile } = useAuth();
+    const permissions = useProjectManagementPermissions();
     
         const fetchTasksAndDependencies = useCallback(async () => {
             if (!selectedProject || !profile) {
@@ -32,6 +33,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 setLoading(false);
                 return;
             }
+            
     
             setLoading(true);
     
@@ -96,15 +98,30 @@ import React, { useState, useEffect, useCallback } from 'react';
         useEffect(() => {
             fetchTasksAndDependencies();
         }, [selectedProject, fetchTasksAndDependencies]);
+
+        // Filter tasks based on current filters
+        const filteredTasks = tasks.filter(task => {
+            // Status filter
+            if (filters.status.length > 0 && !filters.status.includes(task.status)) {
+                return false;
+            }
+            
+            // Milestone filter
+            if (filters.milestone && !task.is_milestone) {
+                return false;
+            }
+            
+            return true;
+        });
     
-        const handleAddTask = async (taskData) => {
-            const { data, error } = await supabase.from('pm_tasks').insert([{ ...taskData, project_code: selectedProject }]).select().single();
-            if (error) {
-                toast({ variant: "destructive", title: "Failed to add task", description: error.message });
-            } else {
-                setTasks([...tasks, data]);
+        const handleAddTask = async (newTask) => {
+            // The task has already been created by AddTaskDialog, so we just need to update the local state
+            try {
+                setTasks([...tasks, newTask]);
                 toast({ title: "Task added successfully!" });
                 setIsAddTaskOpen(false);
+            } catch (error) {
+                toast({ variant: "destructive", title: "Failed to add task", description: error.message });
             }
         };
     
@@ -114,6 +131,15 @@ import React, { useState, useEffect, useCallback } from 'react';
                 toast({ variant: "destructive", title: "Failed to update task", description: error.message });
             } else {
                 setTasks(tasks.map(t => t.task_id === taskId ? data : t));
+            }
+        };
+
+        const handleDeleteTask = async (taskId) => {
+            const { error } = await supabase.from('pm_tasks').delete().eq('task_id', taskId);
+            if (error) {
+                throw new Error(error.message);
+            } else {
+                setTasks(tasks.filter(t => t.task_id !== taskId));
             }
         };
         
@@ -280,6 +306,8 @@ import React, { useState, useEffect, useCallback } from 'react';
                         onSetBaseline={() => toast({ title: "Set Baseline: Coming soon!" })}
                         onUseTemplate={handleUseTemplate}
                         permissions={permissions}
+                        filters={filters}
+                        onFiltersChange={setFilters}
                     />
                     <div className="bg-white p-4 rounded-lg shadow-sm border">
                         {loading ? (
@@ -297,11 +325,12 @@ import React, { useState, useEffect, useCallback } from 'react';
                                 <h3 className="text-lg font-semibold text-gray-800">Please Select a Project</h3>
                                 <p className="text-gray-500 mt-2">Choose a project from the dropdown above to view its Gantt chart.</p>
                             </div>
-                        ) : tasks.length > 0 ? (
+                        ) : filteredTasks.length > 0 ? (
                            <GanttChart 
-                                tasks={tasks} 
+                                tasks={filteredTasks} 
                                 dependencies={dependencies} 
                                 onUpdateTask={handleUpdateTask}
+                                onDeleteTask={handleDeleteTask}
                                 findTask={findTask}
                                 moveTask={moveTask}
                                 onLogTime={handleOpenLogTime}
@@ -314,8 +343,8 @@ import React, { useState, useEffect, useCallback } from 'react';
                                 <h3 className="text-lg font-semibold text-gray-800">This project is empty.</h3>
                                 {permissions.canEditTasks ? (
                                     <>
-                                        <p className="text-gray-500 mt-2">Get started by adding a task or applying the Homebuilding WBS template.</p>
-                                        <Button className="mt-4" onClick={handleUseTemplate}><BookCopy className="mr-2 h-4 w-4"/> Apply Homebuilding Template</Button>
+                                        <p className="text-gray-500 mt-2">Add Tasks by clicking the "Add Task" button above.</p>
+                                        {/* <Button className="mt-4" onClick={handleUseTemplate}><BookCopy className="mr-2 h-4 w-4"/> Apply Homebuilding Template</Button> */}
                                     </>
                                 ) : (
                                     <p className="text-gray-500 mt-2">No tasks have been assigned to you for this project yet.</p>
@@ -328,7 +357,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     isOpen={isAddTaskOpen}
                     onClose={() => setIsAddTaskOpen(false)}
                     onSave={handleAddTask}
-                    project={selectedProject}
+                    project={{ id: selectedProject }}
                 />
                 <LogTimeDialog
                     isOpen={isLogTimeOpen}

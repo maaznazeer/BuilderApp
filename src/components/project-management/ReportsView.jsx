@@ -63,7 +63,10 @@ const ReportsView = ({ projects, selectedProject, setSelectedProject }) => {
                 <div><h2 className="text-2xl font-bold">Project Reports</h2><p className="text-muted-foreground">Analyze project performance and resource allocation.</p></div>
                 <Select value={selectedProject || ''} onValueChange={setSelectedProject} disabled={projects.length === 0}>
                     <SelectTrigger className="w-full md:w-[220px]"><SelectValue placeholder="Select a project" /></SelectTrigger>
-                    <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{projects.map(p => {
+                        const projectId = p.id || p.project_id;
+                        return <SelectItem key={projectId} value={projectId}>{p.name}</SelectItem>;
+                    })}</SelectContent>
                 </Select>
             </div>
 

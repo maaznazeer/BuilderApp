@@ -129,7 +129,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-white rounded-lg shadow-sm border">
                         <Select value={selectedProject || ''} onValueChange={setSelectedProject} disabled={projects.length === 0}>
                             <SelectTrigger className="w-[200px] bg-white"><SelectValue placeholder="Select a project" /></SelectTrigger>
-                            <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                            <SelectContent>{projects.map(p => {
+                                const projectId = p.id || p.project_id;
+                                return <SelectItem key={projectId} value={projectId}>{p.name}</SelectItem>;
+                            })}</SelectContent>
                         </Select>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" onClick={() => setCurrentDate(subDays(currentDate, 7))}><ChevronLeft className="h-4 w-4" /></Button>

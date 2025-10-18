@@ -45,7 +45,7 @@ const GanttHeader = ({ timeRange, gridWidth }) => {
     );
 };
 
-const GanttChart = ({ tasks, dependencies, onUpdateTask, findTask, moveTask, onLogTime, onToggleTimer, activeTimer, permissions }) => {
+const GanttChart = ({ tasks, dependencies, onUpdateTask, onDeleteTask, findTask, moveTask, onLogTime, onToggleTimer, activeTimer, permissions }) => {
     const [gridWidth, setGridWidth] = useState(400);
 
     const timeRange = useMemo(() => {
@@ -110,6 +110,7 @@ const GanttChart = ({ tasks, dependencies, onUpdateTask, findTask, moveTask, onL
                             findTask={findTask}
                             moveTask={moveTask}
                             onUpdateTask={onUpdateTask}
+                            onDeleteTask={onDeleteTask}
                             gridWidth={gridWidth}
                             onLogTime={onLogTime}
                             onToggleTimer={onToggleTimer}

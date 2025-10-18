@@ -5,13 +5,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
 import { supabase } from '@/lib/customSupabaseClient';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronRight, CheckCircle, Circle, Paperclip, Upload, PlusCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCircle, Circle, Paperclip, Upload, PlusCircle, Plus, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOutletContext } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import AddConstructionProcessDialog from '@/components/construction-management/AddConstructionProcessDialog';
 
 const LoadingFallback = () => (
     <div className="flex items-center justify-center h-96">
@@ -30,6 +33,9 @@ const ConstructionProcessPage = () => {
     const [workflowSteps, setWorkflowSteps] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openPhases, setOpenPhases] = useState({});
+    const [isAddProcessOpen, setIsAddProcessOpen] = useState(false);
+    const [constructionProcesses, setConstructionProcesses] = useState([]);
+    const [processesLoading, setProcessesLoading] = useState(false);
 
     const userRole = profile?.app_role;
 
@@ -83,6 +89,70 @@ const ConstructionProcessPage = () => {
     useEffect(() => {
         fetchProjectWorkflow();
     }, [selectedProject, fetchProjectWorkflow]);
+
+    const fetchConstructionProcesses = useCallback(async () => {
+        setProcessesLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('construction_workflow')
+                .select('*')
+                .order('id', { ascending: false });
+            
+            if (error) throw error;
+            setConstructionProcesses(data || []);
+        } catch (error) {
+            toast({ title: 'Error fetching processes', description: error.message, variant: 'destructive' });
+        } finally {
+            setProcessesLoading(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchConstructionProcesses();
+    }, [fetchConstructionProcesses]);
+
+    const handleAddProcess = async (processData) => {
+        try {
+            const { data, error } = await supabase
+                .from('construction_workflow')
+                .insert([{
+                    step_name: processData.name,
+                    project_id: processData.project_id,
+                    phase: processData.phases?.[0]?.name || 'Planning',
+                    phase_order: 1,
+                    step_order: 1,
+                    status: processData.status || 'Not Started',
+                    estimated_duration: processData.estimated_duration
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setConstructionProcesses(prev => [data, ...prev]);
+            toast({ title: 'Process created successfully!' });
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    };
+
+    const handleDeleteProcess = async (processId) => {
+        if (window.confirm('Are you sure you want to delete this construction process?')) {
+            try {
+                const { error } = await supabase
+                    .from('construction_workflow')
+                    .delete()
+                    .eq('id', processId);
+
+                if (error) throw error;
+                
+                setConstructionProcesses(prev => prev.filter(p => p.id !== processId));
+                toast({ title: 'Process deleted successfully!' });
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error deleting process', description: error.message });
+            }
+        }
+    };
     
     const { groupedWorkflow, overallProgress } = useMemo(() => {
         const grouped = workflowSteps.reduce((acc, step) => {
@@ -145,20 +215,131 @@ const ConstructionProcessPage = () => {
                 <meta name="description" content="Track and manage the construction process for your projects." />
             </Helmet>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+                {/* Construction Processes Management */}
                 <Card className="mb-8">
-                    <CardContent className="pt-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-800">{t('workflow_page.title')}</h1>
-                                <p className="text-gray-500 mt-1">{t('workflow_page.description')}</p>
+                                <CardTitle className="text-2xl font-bold">Construction Processes</CardTitle>
+                                <p className="text-gray-500 mt-1">Manage your construction processes and workflows</p>
                             </div>
-                            <div className="mt-4 md:mt-0 w-full md:w-auto md:min-w-[250px]">
-                                <Label htmlFor="project-select">{t('workflow_page.select_project')}</Label>
-                                <Select onValueChange={setSelectedProject} value={selectedProject || ''} disabled={projects.length === 0}>
-                                    <SelectTrigger id="project-select">
-                                        <SelectValue placeholder={t('workflow_page.select_project')} />
+                            <div className="flex items-center gap-4">
+                                <div className="w-64">
+                                    <Label htmlFor="process-project-select">Filter by Project</Label>
+                                    <Select value={selectedProject || 'all'} onValueChange={(value) => setSelectedProject(value === 'all' ? null : value)}>
+                                        <SelectTrigger id="process-project-select">
+                                            <SelectValue placeholder="All Projects" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Projects</SelectItem>
+                                            {projects.map(project => (
+                                                <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Button onClick={() => setIsAddProcessOpen(true)}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    New Process
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {processesLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="w-6 h-6 border-2 border-dashed rounded-full animate-spin border-blue-600"></div>
+                                <span className="ml-2 text-gray-600">Loading processes...</span>
+                            </div>
+                        ) : constructionProcesses.length > 0 ? (
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {constructionProcesses
+                                    .filter(process => !selectedProject || process.project_id === selectedProject)
+                                    .map((process) => (
+                                    <Card key={process.id} className="hover:shadow-md transition-shadow">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-lg">{process.step_name}</h3>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    {projects.find(p => p.id === process.project_id)?.name || 'Unknown Project'}
+                                                </p>
+                                            </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="sm">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem>
+                                                            <Edit className="h-4 w-4 mr-2" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="text-red-600"
+                                                            onClick={() => handleDeleteProcess(process.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <Badge variant="outline">{process.phase}</Badge>
+                                                    <Badge variant={process.status === 'Completed' ? 'default' : process.status === 'In Progress' ? 'secondary' : 'outline'}>
+                                                        {process.status}
+                                                    </Badge>
+                                                </div>
+                                                
+                                                {process.description && (
+                                                    <p className="text-sm text-gray-600 line-clamp-2">{process.description}</p>
+                                                )}
+                                                
+                                                <div className="flex items-center justify-between text-xs text-gray-500">
+                                                    <span>Phase {process.phase_order}</span>
+                                                    <span>{process.estimated_duration}</span>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <PlusCircle className="h-8 w-8 text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">No Construction Processes</h3>
+                                <p className="text-gray-500 mb-4">Get started by creating your first construction process.</p>
+                                <Button onClick={() => setIsAddProcessOpen(true)}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create First Process
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Project Workflow */}
+                <Card className="mb-8">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-2xl font-bold">Project Workflow</CardTitle>
+                                <p className="text-gray-500 mt-1">Track and manage workflow steps for your selected project</p>
+                            </div>
+                            <div className="w-64">
+                                <Label htmlFor="workflow-project-select">Select Project</Label>
+                                <Select onValueChange={(value) => setSelectedProject(value === 'all' ? null : value)} value={selectedProject || 'all'} disabled={projects.length === 0}>
+                                    <SelectTrigger id="workflow-project-select">
+                                        <SelectValue placeholder="Select a project" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="all">All Projects</SelectItem>
                                         {projects.map(project => (
                                             <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                                         ))}
@@ -168,11 +349,11 @@ const ConstructionProcessPage = () => {
                         </div>
                         {selectedProject && (
                             <div className="mt-6">
-                                <Label>{t('workflow_page.overall_progress')}</Label>
+                                <Label>Overall Progress</Label>
                                 <Progress value={overallProgress} className="mt-1" />
                             </div>
                         )}
-                    </CardContent>
+                    </CardHeader>
                 </Card>
 
                 {loading ? <LoadingFallback /> : !selectedProject ? (
@@ -260,6 +441,14 @@ const ConstructionProcessPage = () => {
                         )}
                     </div>
                 )}
+
+                {/* Add Construction Process Dialog */}
+                <AddConstructionProcessDialog
+                    isOpen={isAddProcessOpen}
+                    onClose={() => setIsAddProcessOpen(false)}
+                    onSave={handleAddProcess}
+                    projects={projects}
+                />
             </motion.div>
         </>
     );

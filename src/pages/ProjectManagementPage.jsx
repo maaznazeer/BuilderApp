@@ -33,7 +33,9 @@ import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
             } else {
                 setProjects(data || []);
                 if (data && data.length > 0 && !selectedProject) {
-                    setSelectedProject(data[0].id);
+                    // Always use project ID for pm_tasks queries
+                    const projectId = data[0].id || data[0].project_id;
+                    setSelectedProject(projectId);
                 } else if (!data || data.length === 0) {
                     setSelectedProject(null);
                 }
@@ -59,7 +61,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext.jsx';
             { value: 'calendars', label: t('Calendars'), icon: CalendarDays, component: <CalendarsView {...commonProps} /> },
             { value: 'workload', label: t('Workload'), icon: BarChart3, component: <WorkloadView {...commonProps} /> },
             { value: 'budget', label: t('Budget'), icon: Wallet, component: <BudgetView {...commonProps} /> },
-            { value: 'time-reports', label: t('Time & Reports'), icon: Clock, component: <TimeAndReportsView {...commonProps} /> },
+            // { value: 'time-reports', label: t('Time & Reports'), icon: Clock, component: <TimeAndReportsView {...commonProps} /> },
         ];
     
         return (

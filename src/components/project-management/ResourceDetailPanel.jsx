@@ -117,7 +117,7 @@ const ResourceDetailPanel = ({ resource }) => {
                     <Tabs defaultValue="tasks" className="w-full h-full flex flex-col">
                         <TabsList>
                             <TabsTrigger value="tasks">Assigned Tasks ({assignedTasks.length})</TabsTrigger>
-                            <TabsTrigger value="timelogs">Time Logs ({timeLogs.length})</TabsTrigger>
+                            {/* <TabsTrigger value="timelogs">Time Logs ({timeLogs.length})</TabsTrigger> */}
                         </TabsList>
                         <TabsContent value="tasks" className="mt-4 flex-grow">
                             <TaskList tasks={assignedTasks} />

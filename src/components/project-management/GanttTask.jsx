@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { GripVertical, ChevronDown, Diamond, Plus, Clock, Play, Pause } from 'lucide-react';
+import { GripVertical, ChevronDown, Diamond, Plus, Clock, Play, Pause, Trash2, Edit3 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ const ItemType = {
     TASK: 'task',
 };
 
-const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTime, onToggleTimer, activeTimer, gridWidth, permissions }) => {
+const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTime, onToggleTimer, onDeleteTask, activeTimer, gridWidth, permissions }) => {
     const originalIndex = findTask(task.task_id).index;
     const ref = useRef(null);
     const { toast } = useToast();
@@ -65,22 +65,33 @@ const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTim
         onUpdateTask(task.task_id, { percent_complete: newPercent });
     };
 
+    const handleDeleteTask = async () => {
+        if (window.confirm(`Are you sure you want to delete "${task.task_name}"? This action cannot be undone.`)) {
+            try {
+                await onDeleteTask(task.task_id);
+                toast({ title: "Task deleted successfully", description: `"${task.task_name}" has been removed.` });
+            } catch (error) {
+                toast({ variant: "destructive", title: "Failed to delete task", description: error.message });
+            }
+        }
+    };
+
     const opacity = isDragging ? 0.3 : 1;
     const isTimerActiveForThisTask = activeTimer?.taskId === task.task_id;
 
     return (
-        <div ref={preview} style={{ opacity, width: `${gridWidth}px` }} className="flex h-10 border-b border-gray-200 bg-white items-center group relative">
-            <div ref={ref} className="flex items-center w-full px-2 h-full">
-                <GripVertical className={cn("h-5 w-5 text-gray-400 mr-2 flex-shrink-0", canEdit ? "cursor-move" : "cursor-not-allowed")} />
-                {task.is_milestone && <Diamond className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />}
-                <span className="truncate flex-grow" title={task.task_name}>{task.task_name}</span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onToggleTimer(task.task_id)} disabled={!canLogTime}>
+        <div ref={preview} style={{ opacity, width: `${gridWidth}px` }} className="flex h-12 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50 items-center group relative hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
+            <div ref={ref} className="flex items-center w-full px-3 h-full">
+                <GripVertical className={cn("h-5 w-5 text-gray-400 mr-3 flex-shrink-0 transition-colors", canEdit ? "cursor-move hover:text-gray-600" : "cursor-not-allowed")} />
+                {task.is_milestone && <Diamond className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0 animate-pulse" />}
+                <span className="truncate flex-grow font-medium text-gray-800" title={task.task_name}>{task.task_name}</span>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-blue-100 hover:text-blue-600 transition-colors" onClick={() => onToggleTimer(task.task_id)} disabled={!canLogTime}>
                         {isTimerActiveForThisTask ? <Pause className="h-4 w-4 text-red-500 animate-pulse" /> : <Play className="h-4 w-4" />}
                     </Button>
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                                 <ChevronDown className="h-4 w-4" />
                             </Button>
                         </PopoverTrigger>
@@ -104,7 +115,7 @@ const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTim
                                 </div>
                                 <div className="flex gap-2 pt-2 border-t">
                                     <Button size="sm" className="flex-1" onClick={() => onLogTime(task)} disabled={!canLogTime}><Clock className="mr-2 h-4 w-4" /> Log Time</Button>
-                                    <Button size="sm" variant="secondary" className="flex-1" onClick={() => toast({title: "Add subtask: Coming soon!"})} disabled={!canEdit}><Plus className="mr-2 h-4 w-4" /> Add Subtask</Button>
+                                    <Button size="sm" variant="destructive" onClick={handleDeleteTask} disabled={!canEdit}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
                                 </div>
                             </div>
                         </PopoverContent>
@@ -150,16 +161,16 @@ const GanttTaskBar = ({ task, onUpdateTask, taskPosition, dayWidth, getStatusCol
             dragElastic={0}
         >
             <div className={cn(
-                "h-6 w-full rounded flex items-center justify-between px-2 text-white text-xs relative overflow-hidden",
-                canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                "h-8 w-full rounded-lg flex items-center justify-between px-3 text-white text-xs relative overflow-hidden shadow-md hover:shadow-lg transition-all duration-200",
+                canEdit ? 'cursor-grab active:cursor-grabbing hover:scale-105' : 'cursor-default',
                 getStatusColor(task.status),
-                overdue && 'ring-2 ring-red-500 ring-offset-1'
+                overdue && 'ring-2 ring-red-500 ring-offset-2 shadow-red-200'
             )}>
-                 <div style={{ width: `${task.percent_complete}%`}} className="absolute left-0 top-0 h-full bg-black/25 rounded-l-md pointer-events-none"></div>
-                 <span className="relative truncate font-semibold">{task.task_name}</span>
-                 <div className="flex items-center gap-1">
-                    {isTimerActiveForThisTask && <Clock className="h-3 w-3 animate-pulse" />}
-                    <span className="relative">{task.percent_complete}%</span>
+                 <div style={{ width: `${task.percent_complete}%`}} className="absolute left-0 top-0 h-full bg-white/20 rounded-l-lg pointer-events-none"></div>
+                 <span className="relative truncate font-semibold drop-shadow-sm">{task.task_name}</span>
+                 <div className="flex items-center gap-2">
+                    {isTimerActiveForThisTask && <Clock className="h-3 w-3 animate-pulse drop-shadow-sm" />}
+                    <span className="relative bg-white/20 px-2 py-1 rounded-full text-xs font-bold">{task.percent_complete}%</span>
                  </div>
             </div>
             

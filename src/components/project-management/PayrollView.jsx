@@ -8,8 +8,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Loader2, CalendarPlus as CalendarIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, CalendarPlus as CalendarIcon, ChevronDown, ChevronUp, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth } from 'date-fns';
+import { usePlannerWorkflow } from '@/hooks/usePlannerWorkflow';
 
 const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
     const { t } = useTranslation();
@@ -22,14 +24,20 @@ const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
     const [loadingData, setLoadingData] = useState(false);
     const [payrollData, setPayrollData] = useState([]);
     const [expandedWorkers, setExpandedWorkers] = useState({});
+    const [showTimeLogIntegration, setShowTimeLogIntegration] = useState(false);
+    
+    // Use the planner workflow hook for comprehensive data
+    const {
+        timeLogs,
+        tasks,
+        generatePayrollFromTimeLogs,
+        loading: workflowLoading
+    } = usePlannerWorkflow(selectedProject);
 
     const fetchData = useCallback(async () => {
         if (!selectedProject || !selectedMonth || isNaN(selectedMonth.getTime())) {
-            console.log('PayrollView: fetchData skipped - selectedProject:', selectedProject, 'selectedMonth:', selectedMonth);
             return;
         }
-
-        console.log('PayrollView: Fetching data for project:', selectedProject, 'month:', selectedMonth);
         setLoadingData(true);
         setPayrollData([]);
 
@@ -38,10 +46,20 @@ const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
             const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
             const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
             
-            console.log('PayrollView: Fetching data for project:', selectedProject);
-            console.log('PayrollView: Month range:', monthStart.toISOString().split('T')[0], 'to', monthEnd.toISOString().split('T')[0]);
+            // First, get the project code from the project ID
+            const { data: projectData, error: projectError } = await supabase
+                .from('projects')
+                .select('code')
+                .eq('id', selectedProject)
+                .single();
+
+            if (projectError || !projectData) {
+                toast({ title: 'Project not found', description: 'Could not find project details', variant: 'destructive' });
+                setPayrollData([]);
+                return;
+            }
             
-            // Query payroll_entries table directly (same approach as TradeSummaryWidget)
+            // Query payroll_entries table with the project code
             const { data: payrollEntries, error } = await supabase
                 .from('payroll_entries')
                 .select(`
@@ -53,20 +71,17 @@ const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
                         trade
                     )
                 `)
-                .eq('project_code', selectedProject)
+                .eq('project_code', projectData.code)
                 .gte('payment_date', monthStart.toISOString().split('T')[0])
                 .lte('payment_date', monthEnd.toISOString().split('T')[0]);
 
             if (error) {
-                console.log('PayrollView: Query error:', error);
                 toast({ title: 'Error fetching payroll data', description: error.message, variant: 'destructive' });
             } else {
-                console.log('PayrollView: Query success, data:', payrollEntries);
                 setPayrollData(payrollEntries || []);
                 
                 // If no data found, show helpful message
                 if (!payrollEntries || payrollEntries.length === 0) {
-                    console.log('PayrollView: No payroll data found for this project and month');
                     toast({ 
                         title: 'No Data Found', 
                         description: 'No payroll entries found for this project and month. Try adding some payroll data first.', 
@@ -178,11 +193,14 @@ const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
                                 <SelectValue placeholder="Select Project" />
                             </SelectTrigger>
                             <SelectContent>
-                                {projects.map(p => (
-                                    <SelectItem key={p.project_code} value={p.project_code}>
-                                        {p.name}
-                                    </SelectItem>
-                                ))}
+                                {projects.map(p => {
+                                    const projectId = p.id || p.project_id;
+                                    return (
+                                        <SelectItem key={projectId} value={projectId}>
+                                            {p.name}
+                                        </SelectItem>
+                                    );
+                                })}
                             </SelectContent>
                         </Select>
                         <Popover>
@@ -202,6 +220,160 @@ const PayrollView = ({ selectedProject, projects, setSelectedProject }) => {
                         </Button>
                     </div>
                 </CardHeader>
+            </Card>
+
+            {/* Time Log Integration Section */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Clock className="h-5 w-5" />
+                        Time Log Integration
+                    </CardTitle>
+                    <CardDescription>
+                        Generate payroll entries from time logs for this project
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="font-medium">Available Time Logs</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    {timeLogs.length} time log entries found for this project
+                                </p>
+                            </div>
+                            <Button 
+                                onClick={() => setShowTimeLogIntegration(!showTimeLogIntegration)}
+                                variant="outline"
+                            >
+                                {showTimeLogIntegration ? 'Hide' : 'Show'} Integration
+                            </Button>
+                        </div>
+                        
+                        {showTimeLogIntegration && (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <Users className="h-4 w-4 text-blue-600" />
+                                                <span className="text-sm font-medium">Workers</span>
+                                            </div>
+                                            <div className="text-2xl font-bold">
+                                                {new Set(timeLogs.map(tl => tl.worker_code).filter(Boolean)).size}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-green-600" />
+                                                <span className="text-sm font-medium">Total Hours</span>
+                                            </div>
+                                            <div className="text-2xl font-bold">
+                                                {timeLogs.reduce((sum, tl) => sum + (tl.hours || 0), 0).toFixed(1)}h
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <DollarSign className="h-4 w-4 text-purple-600" />
+                                                <span className="text-sm font-medium">Estimated Cost</span>
+                                            </div>
+                                            <div className="text-2xl font-bold">
+                                                ${timeLogs.reduce((sum, tl) => {
+                                                    const rate = tl.resources?.hourly_rate || 0;
+                                                    return sum + ((tl.hours || 0) * rate);
+                                                }, 0).toFixed(2)}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <h4 className="font-medium">Time Logs by Worker</h4>
+                                    <div className="space-y-2">
+                                        {Object.entries(
+                                            timeLogs.reduce((acc, log) => {
+                                                const workerCode = log.worker_code || 'unassigned';
+                                                if (!acc[workerCode]) {
+                                                    acc[workerCode] = [];
+                                                }
+                                                acc[workerCode].push(log);
+                                                return acc;
+                                            }, {})
+                                        ).map(([workerCode, logs]) => {
+                                            const totalHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
+                                            const totalCost = logs.reduce((sum, log) => {
+                                                const rate = log.resources?.hourly_rate || 0;
+                                                return sum + ((log.hours || 0) * rate);
+                                            }, 0);
+                                            
+                                            return (
+                                                <div key={workerCode} className="p-3 border rounded-lg">
+                                                    <div className="flex justify-between items-center">
+                                                        <div>
+                                                            <span className="font-medium">
+                                                                {workerCode === 'unassigned' ? 'Unassigned' : `Worker ${workerCode}`}
+                                                            </span>
+                                                            <Badge variant="outline" className="ml-2">
+                                                                {logs.length} entries
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="font-medium">{totalHours.toFixed(1)}h</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                ${totalCost.toFixed(2)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                    <Button 
+                                        onClick={async () => {
+                                            try {
+                                                const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+                                                const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+                                                
+                                                const timeLogData = await generatePayrollFromTimeLogs(null, monthStart, monthEnd);
+                                                toast({
+                                                    title: 'Time Log Data Generated',
+                                                    description: `Found ${timeLogData.length} days with time logs for payroll generation.`
+                                                });
+                                            } catch (error) {
+                                                toast({
+                                                    variant: 'destructive',
+                                                    title: 'Error generating payroll data',
+                                                    description: error.message
+                                                });
+                                            }
+                                        }}
+                                        disabled={timeLogs.length === 0}
+                                    >
+                                        Generate Payroll from Time Logs
+                                    </Button>
+                                    <Button 
+                                        variant="outline"
+                                        onClick={() => {
+                                            toast({
+                                                title: 'Feature Coming Soon',
+                                                description: 'Auto-populate payroll entries from time logs will be available soon.'
+                                            });
+                                        }}
+                                    >
+                                        Auto-populate Entries
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
             </Card>
 
             <Card>

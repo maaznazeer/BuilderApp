@@ -101,7 +101,7 @@ import { hasModuleAccess, hasFullAccess, hasLimitedAccess, getAvailableFeatures 
                         children: filterChildrenByRole([
                             { href: '/dashboard/construction-process', title: 'Construction Process', icon: ClipboardCheck, color: 'text-rose-400' },
                             { href: '/dashboard/workflow-templates', title: 'Workflow Templates', icon: FileText, color: 'text-orange-400' },
-                            { href: '/dashboard/automations', title: 'Automations', icon: Bot, color: 'text-yellow-400' }
+                            // { href: '/dashboard/automations', title: 'Automations', icon: Bot, color: 'text-yellow-400' }
                         ], 'constructionMgt')
                     },
                     hasModuleAccess(userRole, 'workforce') && {

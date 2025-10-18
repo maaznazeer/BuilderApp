@@ -126,8 +126,8 @@ import React, { useEffect, useState } from 'react';
                             <TabsTrigger value="sourcing">Sourcing</TabsTrigger>
                             <TabsTrigger value="media">Media</TabsTrigger>
                             <TabsTrigger value="milestones">Milestones</TabsTrigger>
-                            <TabsTrigger value="communication">Comms</TabsTrigger>
-                            <TabsTrigger value="contingency">Contingency</TabsTrigger>
+                            {/* <TabsTrigger value="communication">Comms</TabsTrigger> */}
+                            {/* <TabsTrigger value="contingency">Contingency</TabsTrigger> */}
                             <TabsTrigger value="gantt">Gantt</TabsTrigger>
                             <TabsTrigger value="loans">Loans</TabsTrigger>
                             <TabsTrigger value="team">Team</TabsTrigger>
