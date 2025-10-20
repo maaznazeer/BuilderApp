@@ -1,6 +1,32 @@
-# Database Setup for Payroll System
+# Database Setup and Migrations
 
-## Create Payroll Entries Table
+## Required Database Migrations
+
+### 1. Add Estimated Duration to Construction Workflow
+
+The `construction_workflow` table is missing the `estimated_duration` column that the application expects. Run this migration to fix the error:
+
+**File**: `alter_construction_workflow_add_estimated_duration.sql`
+
+### 2. Add Project ID to Construction Workflow
+
+The `construction_workflow` table is also missing the `project_id` column referenced by the app. Run this migration:
+
+**File**: `alter_construction_workflow_add_project_id.sql`
+
+### 3. Add Missing Columns to Construction Workflow
+
+The application references additional fields like `status`, `step_name`, `phase`, `phase_order`, `step_order`, `template_id`, and `description`. Run this migration to add them with safe defaults:
+
+**File**: `alter_construction_workflow_add_missing_columns.sql`
+
+### 4. Create Materials Pivot View
+
+The reports rely on a `v_materials_pivot` view. Create it to populate report rows and filter options:
+
+**File**: `create_view_v_materials_pivot.sql`
+
+### 5. Create Payroll Entries Table
 
 To set up the new payroll system, you need to run the SQL script to create the `payroll_entries` table.
 

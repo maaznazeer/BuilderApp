@@ -325,7 +325,7 @@ const ConstructionProcessPage = () => {
                 </Card>
 
                 {/* Project Workflow */}
-                <Card className="mb-8">
+                {/* <Card className="mb-8">
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
@@ -354,7 +354,7 @@ const ConstructionProcessPage = () => {
                             </div>
                         )}
                     </CardHeader>
-                </Card>
+                </Card> */}
 
                 {loading ? <LoadingFallback /> : !selectedProject ? (
                     <div className="text-center py-16 bg-white rounded-lg shadow-sm border">
@@ -433,12 +433,12 @@ const ConstructionProcessPage = () => {
                                 </div>
                             )
                         })}
-                        {workflowSteps.length === 0 && !loading && (
+                        {/* {workflowSteps.length === 0 && !loading && (
                             <div className="text-center py-16">
                                 <h3 className="text-lg font-medium text-gray-800">No workflow steps found for this project.</h3>
                                 <p className="text-gray-500 mt-1">This may be because the project was created without a workflow template. Please define a default workflow in settings.</p>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 )}
 
