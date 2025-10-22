@@ -30,6 +30,12 @@ The reports rely on a `v_materials_pivot` view. Create it to populate report row
 
 To set up the new payroll system, you need to run the SQL script to create the `payroll_entries` table.
 
+### 6. Add Worker Assignment to Tasks
+
+To enable worker assignment in tasks, you need to run the SQL script to add worker assignment capability to the `pm_tasks` table.
+
+**File**: `alter_pm_tasks_add_worker_assignment.sql`
+
 ### Steps:
 
 1. **Open your Supabase Dashboard**

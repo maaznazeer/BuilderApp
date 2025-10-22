@@ -3,8 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { useToast } from "@/components/ui/use-toast";
     import GanttToolbar from '@/components/project-management/GanttToolbar';
     import GanttChart from '@/components/project-management/GanttChart';
-    import AddTaskDialog from '@/components/project-management/AddTaskDialog';
-    import LogTimeDialog from '@/components/project-management/LogTimeDialog';
+import AddTaskDialog from '@/components/project-management/AddTaskDialog';
+import LogTimeDialog from '@/components/project-management/LogTimeDialog';
+import TaskDetailsDialog from '@/components/project-management/TaskDetailsDialog';
     import { DndProvider } from 'react-dnd';
     import { HTML5Backend } from 'react-dnd-html5-backend';
     import { addDays } from 'date-fns';
@@ -19,7 +20,9 @@ import React, { useState, useEffect, useCallback } from 'react';
         const [loading, setLoading] = useState(true);
         const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
         const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
+        const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
         const [taskToLog, setTaskToLog] = useState(null);
+        const [taskToView, setTaskToView] = useState(null);
     const [activeTimer, setActiveTimer] = useState(null); // { taskId, startTime }
     const [filters, setFilters] = useState({ status: [], milestone: false });
     const { toast } = useToast();
@@ -187,6 +190,11 @@ import React, { useState, useEffect, useCallback } from 'react';
                 toast({ title: "Timer started!", description: `Timing for ${tasks.find(t => t.task_id === taskId)?.task_name}.` });
             }
         };
+
+        const handleViewDetails = (task) => {
+            setTaskToView(task);
+            setIsTaskDetailsOpen(true);
+        };
     
         const handleUseTemplate = async () => {
             if (!selectedProject) {
@@ -335,6 +343,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                                 moveTask={moveTask}
                                 onLogTime={handleOpenLogTime}
                                 onToggleTimer={handleToggleTimer}
+                                onViewDetails={handleViewDetails}
                                 activeTimer={activeTimer}
                                 permissions={permissions}
                             />
@@ -364,6 +373,15 @@ import React, { useState, useEffect, useCallback } from 'react';
                     onClose={() => setIsLogTimeOpen(false)}
                     onSave={handleLogTime}
                     task={taskToLog}
+                />
+                <TaskDetailsDialog
+                    isOpen={isTaskDetailsOpen}
+                    onClose={() => setIsTaskDetailsOpen(false)}
+                    task={taskToView}
+                    activeTimer={activeTimer}
+                    onToggleTimer={handleToggleTimer}
+                    onLogTime={handleOpenLogTime}
+                    permissions={permissions}
                 />
             </DndProvider>
         );

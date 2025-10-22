@@ -178,6 +178,32 @@
       }
     }
   },
+  "payroll_approval": {
+    "title": "Payroll Approval",
+    "description": "Review and approve payroll entries for construction workers.",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "approve": "Approve",
+    "reject": "Reject",
+    "total_amount": "Total Amount",
+    "filter_by_status": "Filter by Status",
+    "all_status": "All Status",
+    "search_workers": "Search workers or notes..."
+  },
+  "task_worker_assignment": {
+    "title": "Worker Assignment",
+    "description": "Assign this task to a specific worker for better tracking and payroll integration.",
+    "select_worker": "Select Worker",
+    "no_worker_assigned": "No worker assigned",
+    "selected_worker": "Selected Worker",
+    "worker_name": "Name",
+    "worker_trade": "Trade",
+    "worker_hourly_rate": "Hourly Rate",
+    "quick_assignment": "Quick Worker Assignment (Optional)",
+    "choose_worker": "Choose a worker for this task",
+    "loading_workers": "Loading workers..."
+  },
   "workers": {
     "title": "Worker Directory",
     "description": "Manage your workforce, track their status, and handle payroll.",

@@ -45,7 +45,9 @@ const GanttHeader = ({ timeRange, gridWidth }) => {
     );
 };
 
-const GanttChart = ({ tasks, dependencies, onUpdateTask, onDeleteTask, findTask, moveTask, onLogTime, onToggleTimer, activeTimer, permissions }) => {
+const GanttChart = ({ tasks, dependencies, onUpdateTask, onDeleteTask, findTask, moveTask, onLogTime, onToggleTimer, onViewDetails, activeTimer, permissions }) => {
+    console.log('GanttChart received onViewDetails:', onViewDetails);
+    console.log('typeof onViewDetails in GanttChart:', typeof onViewDetails);
     const [gridWidth, setGridWidth] = useState(400);
 
     const timeRange = useMemo(() => {
@@ -114,6 +116,7 @@ const GanttChart = ({ tasks, dependencies, onUpdateTask, onDeleteTask, findTask,
                             gridWidth={gridWidth}
                             onLogTime={onLogTime}
                             onToggleTimer={onToggleTimer}
+                            onViewDetails={onViewDetails}
                             activeTimer={activeTimer}
                             permissions={permissions}
                        />

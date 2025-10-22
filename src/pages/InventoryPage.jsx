@@ -1028,10 +1028,10 @@ const InventoryPage = () => {
       </Helmet>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6 p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div><h1 className="text-3xl font-bold text-gray-800">{t('inventory.title')}</h1><p className="text-gray-500 mt-1">{t('inventory.description')}</p></div>
+          <div><h1 className="text-3xl font-bold text-gray-800">{t('Inventory')}</h1><p className="text-gray-500 mt-1">{t('Manage your inventory of materials and suppliers.')}</p></div>
           <div className="flex gap-2">
             <ImportDialog onUpdate={fetchData} />
-            <Button onClick={handleAdd}><PlusCircle className="mr-2 h-4 w-4" />{t('inventory.add_item')}</Button>
+            <Button onClick={handleAdd}><PlusCircle className="mr-2 h-4 w-4" />{t('Add Item')}</Button>
           </div>
         </div>
 

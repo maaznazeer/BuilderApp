@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
-import { GripVertical, ChevronDown, Diamond, Plus, Clock, Play, Pause, Trash2, Edit3 } from 'lucide-react';
+import { GripVertical, ChevronDown, Diamond, Plus, Clock, Play, Pause, Trash2, Edit3, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ const ItemType = {
     TASK: 'task',
 };
 
-const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTime, onToggleTimer, onDeleteTask, activeTimer, gridWidth, permissions }) => {
+const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTime, onToggleTimer, onDeleteTask, onViewDetails = () => {}, activeTimer, gridWidth, permissions }) => {
     const originalIndex = findTask(task.task_id).index;
     const ref = useRef(null);
     const { toast } = useToast();
@@ -114,6 +114,20 @@ const GanttTaskGrid = ({ task, index, findTask, moveTask, onUpdateTask, onLogTim
                                     </div>
                                 </div>
                                 <div className="flex gap-2 pt-2 border-t">
+                                    <Button size="sm" variant="outline" onClick={() => {
+                                        console.log('View Details button clicked for task:', task.task_name);
+                                        console.log('onViewDetails function:', onViewDetails);
+                                        console.log('typeof onViewDetails:', typeof onViewDetails);
+                                        alert('View Details button clicked for: ' + task.task_name);
+                                        if (onViewDetails && typeof onViewDetails === 'function') {
+                                            console.log('Calling onViewDetails...');
+                                            onViewDetails(task);
+                                        } else {
+                                            console.error('onViewDetails is not a function or is undefined');
+                                        }
+                                    }} className="flex-1">
+                                        <Eye className="mr-2 h-4 w-4" /> View Details
+                                    </Button>
                                     <Button size="sm" className="flex-1" onClick={() => onLogTime(task)} disabled={!canLogTime}><Clock className="mr-2 h-4 w-4" /> Log Time</Button>
                                     <Button size="sm" variant="destructive" onClick={handleDeleteTask} disabled={!canEdit}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
                                 </div>

@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, GitBranch, Files, Bot } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, GitBranch, Files, Bot, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { useConstructionProcesses, useWorkflowTemplates, useAutomations } from '@/hooks/useConstructionManagement.js';
+import PayrollApprovalWidget from '@/components/construction-management/PayrollApprovalWidget';
 
 const ManagementCard = ({ title, icon: Icon, data, isLoading, renderItem, buttonText, buttonLink }) => {
     const navigate = useNavigate();
@@ -36,6 +38,7 @@ const ManagementCard = ({ title, icon: Icon, data, isLoading, renderItem, button
 };
 
 const ConstructionManagementSection = () => {
+    const [activeTab, setActiveTab] = useState('overview');
     const { data: processes, isLoading: processesLoading } = useConstructionProcesses();
     const { data: templates, isLoading: templatesLoading } = useWorkflowTemplates();
     const { data: automations, isLoading: automationsLoading } = useAutomations();
@@ -70,46 +73,66 @@ const ConstructionManagementSection = () => {
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Construction Management</h2>
-            <motion.div
-                className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-                initial="hidden"
-                animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            >
-                <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                    <ManagementCard
-                        title="Construction Process"
-                        icon={GitBranch}
-                        data={processes}
-                        isLoading={processesLoading}
-                        renderItem={renderProcess}
-                        buttonText="New Process"
-                        buttonLink="/dashboard/construction-process"
-                    />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                    <ManagementCard
-                        title="Workflow Templates"
-                        icon={Files}
-                        data={templates}
-                        isLoading={templatesLoading}
-                        renderItem={renderTemplate}
-                        buttonText="New Template"
-                        buttonLink="/dashboard/workflow-templates"
-                    />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                    <ManagementCard
-                        title="Automations"
-                        icon={Bot}
-                        data={automations}
-                        isLoading={automationsLoading}
-                        renderItem={renderAutomation}
-                        buttonText="New Automation"
-                        buttonLink="/dashboard/automations"
-                    />
-                </motion.div>
-            </motion.div>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+                    <TabsTrigger value="overview" className="flex items-center gap-2">
+                        <GitBranch className="w-4 h-4" />
+                        Overview
+                    </TabsTrigger>
+                    <TabsTrigger value="payroll" className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Payroll Approval
+                    </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="overview" className="mt-6">
+                    <motion.div
+                        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                        initial="hidden"
+                        animate="visible"
+                        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+                    >
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                            <ManagementCard
+                                title="Construction Process"
+                                icon={GitBranch}
+                                data={processes}
+                                isLoading={processesLoading}
+                                renderItem={renderProcess}
+                                buttonText="New Process"
+                                buttonLink="/dashboard/construction-process"
+                            />
+                        </motion.div>
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                            <ManagementCard
+                                title="Workflow Templates"
+                                icon={Files}
+                                data={templates}
+                                isLoading={templatesLoading}
+                                renderItem={renderTemplate}
+                                buttonText="New Template"
+                                buttonLink="/dashboard/workflow-templates"
+                            />
+                        </motion.div>
+                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                            <ManagementCard
+                                title="Automations"
+                                icon={Bot}
+                                data={automations}
+                                isLoading={automationsLoading}
+                                renderItem={renderAutomation}
+                                buttonText="New Automation"
+                                buttonLink="/dashboard/automations"
+                            />
+                        </motion.div>
+                    </motion.div>
+                </TabsContent>
+                
+                <TabsContent value="payroll" className="mt-6">
+                    <PayrollApprovalWidget />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };

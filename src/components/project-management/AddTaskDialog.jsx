@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
         import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
         import { Calendar } from "@/components/ui/calendar";
         import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-        import { CalendarPlus as CalendarIcon, Users, Package, DollarSign } from 'lucide-react';
+        import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+        import { CalendarPlus as CalendarIcon, Users, Package, DollarSign, User } from 'lucide-react';
         import { format } from 'date-fns';
         import { cn } from '@/lib/utils';
         import { supabase } from '@/lib/customSupabaseClient';
@@ -24,6 +25,9 @@ const AddTaskDialog = ({ isOpen, onClose, onSave, project }) => {
     const [estimatedMaterialCost, setEstimatedMaterialCost] = useState(0);
     const [selectedResources, setSelectedResources] = useState([]);
     const [selectedMaterials, setSelectedMaterials] = useState([]);
+    const [selectedWorker, setSelectedWorker] = useState('');
+    const [workers, setWorkers] = useState([]);
+    const [loadingWorkers, setLoadingWorkers] = useState(false);
     const [activeTab, setActiveTab] = useState('basic');
 
     useEffect(() => {
@@ -37,9 +41,35 @@ const AddTaskDialog = ({ isOpen, onClose, onSave, project }) => {
             setEstimatedMaterialCost(0);
             setSelectedResources([]);
             setSelectedMaterials([]);
+            setSelectedWorker('none');
             setActiveTab('basic');
         }
     }, [isOpen]);
+
+    // Fetch workers when dialog opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchWorkers();
+        }
+    }, [isOpen]);
+
+    const fetchWorkers = async () => {
+        setLoadingWorkers(true);
+        try {
+            const { data, error } = await supabase
+                .from('workers')
+                .select('worker_code, first_name, surname, trade, daily_rate')
+                .eq('active', true)
+                .order('first_name');
+
+            if (error) throw error;
+            setWorkers(data || []);
+        } catch (error) {
+            console.error('Error fetching workers:', error);
+        } finally {
+            setLoadingWorkers(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!taskName || !startDate || !endDate) {
@@ -59,7 +89,8 @@ const AddTaskDialog = ({ isOpen, onClose, onSave, project }) => {
                 percent_complete: 0,
                 estimated_labor_cost: estimatedLaborCost,
                 estimated_material_cost: estimatedMaterialCost,
-                project_code: project?.id || project?.code
+                project_code: project?.id || project?.code,
+                assigned_worker_code: selectedWorker === 'none' ? null : selectedWorker
             };
 
             const { data: newTask, error: taskError } = await supabase
@@ -116,8 +147,9 @@ const AddTaskDialog = ({ isOpen, onClose, onSave, project }) => {
                 </DialogHeader>
                 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                        <TabsTrigger value="worker">Worker</TabsTrigger>
                         <TabsTrigger value="resources">Resources</TabsTrigger>
                         <TabsTrigger value="materials">Materials</TabsTrigger>
                         <TabsTrigger value="costs">Costs</TabsTrigger>
@@ -180,6 +212,78 @@ const AddTaskDialog = ({ isOpen, onClose, onSave, project }) => {
                                 onChange={(e) => setIsMilestone(e.target.checked)} 
                             />
                             <Label htmlFor="isMilestone">Mark as Milestone</Label>
+                        </div>
+                        
+                        {/* Quick Worker Assignment */}
+                        <div className="space-y-2">
+                            <Label htmlFor="quickWorker">Quick Worker Assignment (Optional)</Label>
+                            <Select value={selectedWorker} onValueChange={setSelectedWorker}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a worker (optional)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No worker assigned</SelectItem>
+                                    {workers.map(worker => (
+                                        <SelectItem key={worker.worker_code} value={worker.worker_code}>
+                                            {worker.first_name} {worker.surname} ({worker.trade})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="worker" className="space-y-4 py-4">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <User className="w-5 h-5 text-blue-500" />
+                                <h3 className="text-lg font-semibold">Worker Assignment</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Assign this task to a specific worker for better tracking and payroll integration.
+                            </p>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="workerSelect">Select Worker</Label>
+                                <Select value={selectedWorker} onValueChange={setSelectedWorker}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Choose a worker for this task" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No worker assigned</SelectItem>
+                                        {loadingWorkers ? (
+                                            <SelectItem value="loading" disabled>Loading workers...</SelectItem>
+                                        ) : (
+                                            workers.map(worker => (
+                                                <SelectItem key={worker.worker_code} value={worker.worker_code}>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">{worker.first_name} {worker.surname}</span>
+                                                        <span className="text-sm text-muted-foreground">
+                                                            {worker.trade} • ${worker.daily_rate}/day
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            {selectedWorker && selectedWorker !== 'none' && (
+                                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <h4 className="font-medium text-blue-900">Selected Worker</h4>
+                                    {(() => {
+                                        const worker = workers.find(w => w.worker_code === selectedWorker);
+                                        return worker ? (
+                                            <div className="mt-2 text-sm text-blue-700">
+                                                <p><strong>Name:</strong> {worker.first_name} {worker.surname}</p>
+                                                <p><strong>Trade:</strong> {worker.trade}</p>
+                                                <p><strong>Daily Rate:</strong> ${worker.daily_rate}</p>
+                                            </div>
+                                        ) : null;
+                                    })()}
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
 

@@ -54,6 +54,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
     const ConstructionWorkflowPage = lazy(() => import('@/pages/ConstructionWorkflowPage.jsx'));
     const CalendarPage = lazy(() => import('@/pages/CalendarPage.jsx'));
     const WorkflowTemplatesPage = lazy(() => import('@/pages/WorkflowTemplatesPage.jsx'));
+    const PayrollApprovalPage = lazy(() => import('@/pages/PayrollApprovalPage.jsx'));
     const AutomationsPage = lazy(() => import('@/pages/AutomationsPage.jsx'));
     const ProjectMaterialsPage = lazy(() => import('@/pages/ProjectMaterialsPage.jsx'));
     const FinancialLedgerPage = lazy(() => import('@/pages/FinancialLedgerPage.jsx'));
@@ -181,6 +182,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="construction-process" element={<ConstructionProcessPage />} />
                 <Route path="workflow-templates" element={<WorkflowTemplatesPage />} />
+                <Route path="payroll-approval" element={<PayrollApprovalPage />} />
                 <Route path="automations" element={<AutomationsPage />} />
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="suppliers" element={<SuppliersPage />} />
