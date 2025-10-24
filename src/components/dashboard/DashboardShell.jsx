@@ -37,7 +37,7 @@ export default function DashboardShell({ children, active }) {
     // ['Workforce', '/dashboard/workforce'],
     canSeeFinancials && ['Financials', '/dashboard/financials'],
     // ['Supply Chain', '/dashboard/supply-chain'],
-    ['Alerts', '/dashboard/alerts'],
+    // ['Alerts', '/dashboard/alerts'],
   ].filter(Boolean);
 
   return (

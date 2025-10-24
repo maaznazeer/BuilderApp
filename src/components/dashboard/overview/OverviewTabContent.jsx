@@ -10,6 +10,12 @@ import DashboardFilters from '@/components/dashboard/overview/DashboardFilters';
 import TasksStatus from '@/components/dashboard/overview/TasksStatus';
 import MyTasksKpiStrip from '@/components/dashboard/overview/MyTasksKpiStrip';
 import MyUrgentTasks from '@/components/dashboard/overview/MyUrgentTasks';
+import BudgetOverview from '@/components/dashboard/overview/BudgetOverview';
+import ProjectCostChart from '@/components/dashboard/overview/ProjectCostChart';
+import FinancialTrendsChart from '@/components/dashboard/overview/FinancialTrendsChart';
+import ProjectPerformanceDashboard from '@/components/dashboard/overview/ProjectPerformanceDashboard';
+import SimpleProjectChart from '@/components/dashboard/overview/SimpleProjectChart';
+import FinancialSummaryCard from '@/components/dashboard/overview/FinancialSummaryCard';
 
 const OverviewTabContent = () => {
     const containerVariants = {
@@ -37,6 +43,28 @@ const OverviewTabContent = () => {
             initial="hidden"
             animate="visible"
         >
+            {/* Financial Overview Section */}
+            <motion.div variants={itemVariants}>
+                <FinancialSummaryCard />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+                <SimpleProjectChart />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+                <ProjectCostChart />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+                <FinancialTrendsChart />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+                <ProjectPerformanceDashboard />
+            </motion.div>
+
+            {/* Traditional Dashboard Elements */}
             <motion.div variants={itemVariants}>
                 <DashboardFilters />
             </motion.div>
@@ -46,17 +74,10 @@ const OverviewTabContent = () => {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-                <MyTasksKpiStrip />
-            </motion.div>
-            
-            <motion.div variants={itemVariants}>
-                 <UrgentTasks />
-            </motion.div>
-            
-            <motion.div variants={itemVariants}>
-                 <MyUrgentTasks />
+                <BudgetOverview />
             </motion.div>
 
+            {/* Task Management Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <motion.div variants={itemVariants} className="lg:col-span-2">
                     <TaskStatusChart />
@@ -65,6 +86,16 @@ const OverviewTabContent = () => {
                     <TasksStatus />
                 </motion.div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div variants={itemVariants}>
+                    <UrgentTasks />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                    <MyUrgentTasks />
+                </motion.div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <motion.div variants={itemVariants} className="lg:col-span-1">
                     <RecentActivityFeed />
@@ -74,7 +105,7 @@ const OverviewTabContent = () => {
                 </motion.div>
             </div>
 
-             <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants}>
                 <AiExecutiveSummary />
             </motion.div>
 

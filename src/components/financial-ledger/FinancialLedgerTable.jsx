@@ -15,9 +15,52 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, PlusCircle, Download } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, PlusCircle, Download, AlertTriangle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { useBudgetTracking } from '@/hooks/useBudgetTracking';
+
+// Component to show budget status for a single entry
+const BudgetStatusCell = ({ entry }) => {
+  const { budgetData } = useBudgetTracking(entry.project_id);
+  
+  if (!budgetData || !entry.expense_amount) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const { budgetTotal, totalSpent, remainingBudget } = budgetData;
+  const newTotalSpent = totalSpent + entry.expense_amount;
+  const newRemainingBudget = budgetTotal - newTotalSpent;
+  const percentage = budgetTotal > 0 ? (newTotalSpent / budgetTotal) * 100 : 0;
+
+  const isOverBudget = newRemainingBudget < 0;
+  const isNearLimit = percentage >= 90;
+
+  if (isOverBudget) {
+    return (
+      <Badge variant="destructive" className="flex items-center gap-1">
+        <AlertTriangle className="h-3 w-3" />
+        Over Budget
+      </Badge>
+    );
+  }
+
+  if (isNearLimit) {
+    return (
+      <Badge variant="secondary" className="flex items-center gap-1 bg-orange-100 text-orange-800">
+        <AlertTriangle className="h-3 w-3" />
+        Near Limit
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="flex items-center gap-1">
+      <CheckCircle className="h-3 w-3" />
+      Within Budget
+    </Badge>
+  );
+};
 
 export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
   const [filter, setFilter] = useState('');
@@ -112,6 +155,7 @@ export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
                   Expense{getSortIndicator('expense_amount')}
                 </Button>
               </TableHead>
+              <TableHead>Budget Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -133,6 +177,9 @@ export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
                 </TableCell>
                 <TableCell className="text-right text-red-600">
                   {entry.expense_amount > 0 ? formatCurrency(entry.expense_amount, entry.currency) : '-'}
+                </TableCell>
+                <TableCell>
+                  <BudgetStatusCell entry={entry} />
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

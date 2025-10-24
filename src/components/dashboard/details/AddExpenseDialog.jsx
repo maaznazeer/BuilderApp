@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { PlusCircle, Loader2, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import BudgetControl from '@/components/ui/BudgetControl';
 
 const expenseSchema = z.object({
   category: z.string().min(1, 'Category is required'),
@@ -48,6 +49,7 @@ const AddExpenseDialog = ({ projectId, onExpenseAdded }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [file, setFile] = useState(null);
+  const [budgetStatus, setBudgetStatus] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(expenseSchema),
@@ -68,6 +70,17 @@ const AddExpenseDialog = ({ projectId, onExpenseAdded }) => {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
       return;
     }
+
+    // Check budget before submitting
+    if (budgetStatus?.overBudget) {
+      toast({
+        variant: 'destructive',
+        title: 'Budget Exceeded',
+        description: 'This expense would exceed the project budget. Please reduce the amount or add more funds to the project.',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -176,6 +189,17 @@ const AddExpenseDialog = ({ projectId, onExpenseAdded }) => {
                 </FormItem>
               )}
             />
+            
+            {/* Budget Control */}
+            {projectId && form.watch('amount') && (
+              <BudgetControl
+                projectId={projectId}
+                amount={parseFloat(form.watch('amount')) || 0}
+                category="expense"
+                onBudgetCheck={setBudgetStatus}
+                compact={false}
+              />
+            )}
             <FormItem>
               <FormLabel>Proof of Expense (Optional)</FormLabel>
               <FormControl>

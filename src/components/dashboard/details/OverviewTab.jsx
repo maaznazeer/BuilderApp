@@ -3,9 +3,13 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { supabase } from '@/lib/customSupabaseClient';
     import { useToast } from '@/components/ui/use-toast';
     import { Skeleton } from '@/components/ui/skeleton';
-    import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-    import { Progress } from '@/components/ui/progress';
-    import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import BudgetAlert from '@/components/ui/BudgetAlert';
+import { useBudgetTracking } from '@/hooks/useBudgetTracking';
+import { useVarianceTracking } from '@/hooks/useVarianceTracking';
     import { format, formatDistanceToNow, parseISO } from 'date-fns';
     import {
       AlertCircle,
@@ -59,6 +63,12 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [loading, setLoading] = useState(true);
       const [isImporting, setIsImporting] = useState(false);
       const [error, setError] = useState(null);
+      
+      // Use the comprehensive budget tracking hook
+      const { budgetData, loading: budgetLoading } = useBudgetTracking(project?.id);
+      
+      // Use variance tracking hook
+      const { varianceData, loading: varianceLoading } = useVarianceTracking(project?.id);
 
       const fetchOverviewData = useCallback(async () => {
         if (!project?.id) return;
@@ -66,23 +76,17 @@ import React, { useState, useEffect, useCallback } from 'react';
         setError(null);
         try {
           const [
-            { data: expensesData, error: expensesError },
             { data: milestoneData, error: milestoneError },
             { data: activityData, error: activityError }
           ] = await Promise.all([
-            supabase.from('expenses').select('amount').eq('project_id', project.id),
             supabase.from('milestones').select('title, due_date').eq('project_id', project.id).order('due_date', { ascending: true }).limit(1),
             supabase.rpc('get_project_activity', { p_project_id: project.id, p_limit: 5 })
           ]);
 
-          if (expensesError) throw expensesError;
           if (milestoneError) throw milestoneError;
           if (activityError) throw activityError;
 
-          const spent = expensesData.reduce((sum, e) => sum + e.amount, 0);
-
           setOverviewData({
-            spent,
             upcomingMilestone: milestoneData[0],
             activityFeed: activityData
           });
@@ -136,7 +140,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         }
       };
 
-      if (loading) {
+      if (loading || budgetLoading || varianceLoading) {
         return (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[...Array(4)].map((_, i) => (
@@ -163,20 +167,85 @@ import React, { useState, useEffect, useCallback } from 'react';
         );
       }
 
-      const { spent, upcomingMilestone, activityFeed } = overviewData || {};
-      const budget = project?.budget_total || 0;
+      const { upcomingMilestone, activityFeed } = overviewData || {};
+      
+      // Use budget data from the comprehensive tracking hook
+      const spent = budgetData?.totalSpent || 0;
+      const budget = budgetData?.budgetTotal || project?.budget_total || 0;
       const spentPercentage = budget > 0 ? (spent / budget) * 100 : 0;
+      const remainingBudget = budget - spent;
+      
+      // Debug logging
+      console.log('OverviewTab Debug:', {
+        budgetData,
+        spent,
+        budget,
+        spentPercentage,
+        project: project?.id,
+        projectCode: project?.code
+      });
+      
+      // Determine budget status
+      const getBudgetStatus = () => {
+        if (spentPercentage >= 100) return { status: 'exceeded', type: 'critical', color: 'text-red-600' };
+        if (spentPercentage >= 90) return { status: 'critical', type: 'warning', color: 'text-orange-600' };
+        if (spentPercentage >= 75) return { status: 'warning', type: 'info', color: 'text-yellow-600' };
+        return { status: 'healthy', type: 'info', color: 'text-green-600' };
+      };
+
+      const budgetStatus = getBudgetStatus();
 
       return (
         <div className="space-y-6">
+          {/* Budget Alerts */}
+          {spentPercentage >= 75 && (
+            <BudgetAlert
+              type={budgetStatus.type}
+              title={`${project.name} Budget Alert`}
+              message={
+                spentPercentage >= 100 ? 
+                  'Budget exceeded! Total spending has reached or exceeded the project budget.' :
+                  spentPercentage >= 90 ?
+                  'Budget nearly exhausted! You have used 90% or more of your project budget.' :
+                  'Budget alert: You have used 75% or more of your project budget.'
+              }
+              amount={spent}
+              percentage={spentPercentage}
+            />
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <StatCard title="Budget vs. Spent" icon={Banknote} color="text-green-600">
+            <StatCard title="Budget vs. Spent" icon={Banknote} color={budgetStatus.color}>
               <div className="flex justify-between items-baseline">
                 <p className="text-3xl font-bold text-gray-900">${(spent || 0).toLocaleString()}</p>
                 <p className="text-md text-gray-500">/ ${(budget).toLocaleString()}</p>
               </div>
-              <Progress value={spentPercentage} className="mt-3 h-3" />
-              <p className="text-sm text-gray-500 mt-2">{Math.round(spentPercentage)}% of budget used</p>
+              <Progress value={Math.min(spentPercentage, 100)} className="mt-3 h-3" />
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm text-gray-500">{Math.round(spentPercentage)}% of budget used</p>
+                <Badge variant={budgetStatus.status === 'exceeded' ? 'destructive' : 
+                           budgetStatus.status === 'critical' ? 'secondary' : 'outline'}>
+                  {budgetStatus.status}
+                </Badge>
+              </div>
+              <div className="mt-2 text-sm">
+                <p className="text-gray-600">
+                  Remaining: <span className={`font-semibold ${budgetStatus.color}`}>
+                    ${remainingBudget.toLocaleString()}
+                  </span>
+                </p>
+                {/* Variance Information */}
+                {varianceData && (
+                  <p className="text-gray-600 mt-1">
+                    Variance: <span className={`font-semibold ${varianceData.variances.total > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ${varianceData.variances.total.toLocaleString()}
+                    </span>
+                    <span className="text-xs ml-1">
+                      ({varianceData.variancePercentages.total > 0 ? '+' : ''}{varianceData.variancePercentages.total.toFixed(1)}%)
+                    </span>
+                  </p>
+                )}
+              </div>
             </StatCard>
 
             <StatCard title="Upcoming Milestone" icon={CalendarClock} color="text-blue-600">

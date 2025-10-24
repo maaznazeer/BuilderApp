@@ -23,6 +23,8 @@ const projectSchema = z.object({
   budget_currency: z.string().length(3, { message: 'Currency must be a 3-letter code (e.g., USD).' }).toUpperCase(),
   budget_total: z.coerce.number().min(0, { message: 'Opening balance cannot be negative.' }),
   start_date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format." }),
+  city: z.string().min(1, { message: 'City is required.' }),
+  country: z.string().min(1, { message: 'Country is required.' }),
 });
 
 const AddProjectForm = ({ onSuccess, onCancel }) => {
@@ -36,6 +38,8 @@ const AddProjectForm = ({ onSuccess, onCancel }) => {
       budget_currency: 'USD',
       budget_total: 0,
       start_date: new Date().toISOString().split('T')[0],
+      city: '',
+      country: '',
     },
   });
 
@@ -49,26 +53,40 @@ const AddProjectForm = ({ onSuccess, onCancel }) => {
       return;
     }
 
+    console.log('Form values being submitted:', values);
+    console.log('Start date value:', values.start_date);
+    console.log('Start date type:', typeof values.start_date);
+
     try {
       const projectCode = `PRJ-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
+      const projectData = {
+        name: values.name,
+        budget_currency: values.budget_currency,
+        currency: values.budget_currency,
+        budget_total: values.budget_total,
+        start_date: values.start_date,
+        city: values.city,
+        country: values.country,
+        owner_uuid: user.id,
+        code: projectCode,
+      };
+      
+      console.log('Project data being inserted:', projectData);
+      
       const { data, error } = await supabase
         .from('projects')
-        .insert([{
-          name: values.name,
-          budget_currency: values.budget_currency,
-          currency: values.budget_currency,
-          budget_total: values.budget_total,
-          start_date: values.start_date,
-          owner_uuid: user.id,
-          code: projectCode,
-        }])
+        .insert([projectData])
         .select()
         .single();
       
       if (error) {
+        console.error('Database error:', error);
         throw error;
       }
+      
+      console.log('Project created successfully:', data);
+      console.log('Created project start_date:', data.start_date);
       
       if(onSuccess) onSuccess(data);
       form.reset();
@@ -149,6 +167,34 @@ const AddProjectForm = ({ onSuccess, onCancel }) => {
             </FormItem>
           )}
         />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., New York" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., United States" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <div className="flex justify-end gap-4 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel

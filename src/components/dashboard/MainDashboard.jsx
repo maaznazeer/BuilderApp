@@ -5,6 +5,11 @@ import StrategicOverview from '@/components/dashboard/StrategicOverview.jsx';
 import WorkspaceSetup from '@/components/dashboard/WorkspaceSetup.jsx';
 import { motion } from 'framer-motion';
 import WelcomeHeader from '@/components/dashboard/WelcomeHeader.jsx';
+import FinancialSummaryCard from '@/components/dashboard/overview/FinancialSummaryCard';
+import SimpleProjectChart from '@/components/dashboard/overview/SimpleProjectChart';
+import ProjectCostChart from '@/components/dashboard/overview/ProjectCostChart';
+import FinancialTrendsChart from '@/components/dashboard/overview/FinancialTrendsChart';
+import ProjectPerformanceDashboard from '@/components/dashboard/overview/ProjectPerformanceDashboard';
 
 const MainDashboard = () => {
   const { showWorkspaceSetup, refreshDashboard } = useDashboard();
@@ -52,11 +57,20 @@ const MainDashboard = () => {
         <motion.div variants={itemVariants} className="flex-shrink-0">
           <KpiStrip />
         </motion.div>
-        
-        {/* Strategic Overview - Takes remaining space */}
-        <motion.div variants={itemVariants} className="">
-          <StrategicOverview />
+
+        {/* Financial Overview Section */}
+        <motion.div variants={itemVariants} className="space-y-6">
+          <FinancialSummaryCard />
         </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-6">
+          <SimpleProjectChart />
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-6">
+          <ProjectCostChart />
+        </motion.div>
+    
       </motion.div>
     </div>
   );

@@ -37,6 +37,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useProject } from '@/contexts/ProjectContext';
+import BudgetControl from '@/components/ui/BudgetControl';
 
 const ledgerSchema = z.object({
   date: z.date({ required_error: 'A date is required.' }),
@@ -122,9 +123,21 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
 
   const entryType = form.watch('entry_type');
   const projectCode = form.watch('project_code');
+  const expenseAmount = form.watch('expense_amount');
   const selectedProject = projects.find(p => p.project_code === projectCode);
+  const [budgetStatus, setBudgetStatus] = useState(null);
 
   async function onSubmit(values) {
+    // Check budget before submitting if it's an expense
+    if (values.entry_type === 'expense' && budgetStatus?.overBudget) {
+      toast({
+        variant: 'destructive',
+        title: 'Budget Exceeded',
+        description: 'This expense would exceed the project budget. Please reduce the amount or add more funds to the project.',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     const dataToInsert = {
@@ -365,6 +378,17 @@ export const AddLedgerEntryDialog = ({ open, onOpenChange, onEntryAdded }) => {
                     </FormItem>
                   )}
                 />
+                
+                {/* Budget Control for Expenses */}
+                {selectedProject && expenseAmount && (
+                  <BudgetControl
+                    projectId={selectedProject.id}
+                    amount={parseFloat(expenseAmount) || 0}
+                    category="expense"
+                    onBudgetCheck={setBudgetStatus}
+                    compact={false}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name="expense_category"

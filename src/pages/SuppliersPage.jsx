@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, Upload, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, Upload, Loader2, Filter, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import ProjectFilter from '@/components/ui/ProjectFilter';
 import {
   Dialog,
   DialogContent,
@@ -132,22 +135,67 @@ const SuppliersPage = () => {
   const [openForm, setOpenForm] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [filteredProject, setFilteredProject] = useState('all');
+  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, code')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
+  }, []);
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await domusDbApi.getSuppliers(selectedProject?.id);
+      // Fetch all suppliers without project filtering
+      const data = await domusDbApi.getSuppliers(null);
+      console.log('Fetched suppliers:', data);
       setSuppliers(data);
     } catch (error) {
       toast({ title: 'Error fetching suppliers', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [toast, selectedProject?.id]);
+  }, [toast]);
 
   useEffect(() => {
+    fetchProjects();
     fetchSuppliers();
-  }, [fetchSuppliers]);
+  }, [fetchProjects, fetchSuppliers]);
+
+  // Filter suppliers based on selected project
+  useEffect(() => {
+    console.log('Filtering suppliers:', { filteredProject, suppliers: suppliers.length, projects: projects.length });
+    
+    if (filteredProject === 'all') {
+      setFilteredSuppliers(suppliers);
+    } else {
+      // Find the project by code to get the ID
+      const selectedProjectData = projects.find(p => p.code === filteredProject);
+      console.log('Selected project data:', selectedProjectData);
+      
+      if (selectedProjectData) {
+        const filtered = suppliers.filter(supplier => {
+          console.log('Checking supplier:', supplier.supplier_name, 'project_id:', supplier.project_id, 'expected:', selectedProjectData.id);
+          return supplier.project_id === selectedProjectData.id;
+        });
+        console.log('Filtered suppliers:', filtered);
+        setFilteredSuppliers(filtered);
+      } else {
+        console.log('No project found for code:', filteredProject);
+        setFilteredSuppliers([]);
+      }
+    }
+  }, [suppliers, filteredProject, projects]);
 
   const handleAdd = () => {
       if (!selectedProject) {
@@ -156,6 +204,14 @@ const SuppliersPage = () => {
       }
       setSelectedSupplier(null);
       setOpenForm(true);
+  };
+
+  const handleProjectFilter = (projectId) => {
+    setFilteredProject(projectId);
+  };
+
+  const clearFilter = () => {
+    setFilteredProject('all');
   };
   
   const handleEdit = (supplier) => {
@@ -235,11 +291,33 @@ const SuppliersPage = () => {
             <div>
                 <h1 className="text-3xl font-bold text-gray-800">Supplier Directory</h1>
                 <p className="text-gray-500">Manage your network of suppliers and vendors.</p>
-                {selectedProject && (
+                {/* {selectedProject && (
                     <p className="text-sm text-blue-600 mt-1">Project: {selectedProject.name}</p>
-                )}
+                )} */}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Select value={filteredProject} onValueChange={handleProjectFilter}>
+                        <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Filter by project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Projects</SelectItem>
+                            {projects.map((project) => (
+                                <SelectItem key={project.id} value={project.code}>
+                                    {project.name} ({project.code})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {filteredProject !== 'all' && (
+                    <Button variant="outline" size="sm" onClick={clearFilter}>
+                        <X className="h-4 w-4 mr-1" />
+                        Clear
+                    </Button>
+                )}
                 <Button asChild variant="outline">
                     <Label htmlFor="csv-import">
                         <Upload className="mr-2 h-4 w-4"/>
@@ -250,6 +328,18 @@ const SuppliersPage = () => {
                 <Button onClick={handleAdd}><PlusCircle className="mr-2 h-4 w-4"/>Add Supplier</Button>
             </div>
         </div>
+
+        {filteredProject !== 'all' && (
+            <div className="flex items-center gap-2 mb-4">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                    <Filter className="h-3 w-3" />
+                    Filtered by: {projects.find(p => p.code === filteredProject)?.name || filteredProject}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                    Showing {filteredSuppliers.length} of {suppliers.length} suppliers
+                </span>
+            </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border">
             <div className="overflow-x-auto">
@@ -267,7 +357,7 @@ const SuppliersPage = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {loading ? (
                             <tr><td colSpan="6" className="text-center py-8"><Loader2 className="animate-spin h-6 w-6 text-blue-600"/></td></tr>
-                        ) : suppliers.map(supplier => (
+                        ) : filteredSuppliers.map(supplier => (
                             <tr key={supplier.id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{supplier.supplier_code}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.supplier_name}{supplier.website && <a href={supplier.website} target="_blank" rel="noopener noreferrer"><LinkIcon className="h-3 w-3 inline ml-2 text-blue-500"/></a>}</td>

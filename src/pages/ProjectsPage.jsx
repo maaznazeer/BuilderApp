@@ -44,18 +44,56 @@ export default function Projects() {
     const [editingProject, setEditingProject] = useState(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-    const fetchProjects = () => {
+    const fetchProjects = async () => {
         setLoading(true);
-        supabase.rpc('projects_overview', { p_ccy: currency })
-            .then(({ data, error }) => {
-                if (error) {
-                    console.error('Error fetching projects overview:', error);
-                    setRows([]);
+        try {
+            // First get the overview data
+            const { data: overviewData, error: overviewError } = await supabase.rpc('projects_overview', { p_ccy: currency });
+            
+            if (overviewError) {
+                console.error('Error fetching projects overview:', overviewError);
+                setRows([]);
+                return;
+            }
+
+            console.log('Projects overview data:', overviewData);
+            
+            // Then get the start_date for each project
+            const projectIds = overviewData?.map(p => p.project_id) || [];
+            console.log('Project IDs to fetch dates for:', projectIds);
+            
+            if (projectIds.length > 0) {
+                const { data: projectsData, error: projectsError } = await supabase
+                    .from('projects')
+                    .select('id, start_date')
+                    .in('id', projectIds);
+                
+                if (projectsError) {
+                    console.error('Error fetching project dates:', projectsError);
                 } else {
-                    setRows(data || []);
+                    console.log('Projects with dates:', projectsData);
+                    
+                    // Merge the start_date into the overview data
+                    const mergedData = overviewData.map(overviewProject => {
+                        const projectWithDate = projectsData?.find(p => p.id === overviewProject.project_id);
+                        return {
+                            ...overviewProject,
+                            start_date: projectWithDate?.start_date || null
+                        };
+                    });
+                    
+                    console.log('Merged data with dates:', mergedData);
+                    setRows(mergedData);
                 }
-                setLoading(false);
-            });
+            } else {
+                setRows(overviewData || []);
+            }
+        } catch (error) {
+            console.error('Error in fetchProjects:', error);
+            setRows([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -123,68 +161,120 @@ export default function Projects() {
                 </div>
 
                 <motion.div
-                    className="mt-4 overflow-x-auto rounded-lg border shadow-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    className="mt-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg bg-white dark:bg-neutral-900"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
                     <table className="w-full text-sm">
-                        <thead className="bg-neutral-50 dark:bg-neutral-800">
+                        <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-neutral-800 dark:to-neutral-900">
                         <tr className="text-left text-muted-foreground">
-                            <th className="p-3 font-medium">Project</th>
-                            <th className="p-3 font-medium">Location</th>
-                            <th className="p-3 font-medium">Status</th>
-                            <th className="p-3 font-medium">Progress</th>
-                            <th className="p-3 font-medium text-right">Budget ({currency})</th>
-                            <th className="p-3 font-medium">Variance</th>
-                            <th className="p-3 font-medium text-right">Actions</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Project</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Location</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Opening Date</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 text-right">Budget ({currency})</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 text-right">Spent ({currency})</th>
+                            <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="bg-white dark:bg-neutral-900">
-                                    {[...Array(7)].map((_, j) => <td key={j} className="p-3"><div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full"></div></td>)}
+                                <tr key={i} className="bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
+                                    {[...Array(7)].map((_, j) => <td key={j} className="p-4"><div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full animate-pulse"></div></td>)}
                                 </tr>
                             ))
                         ) : filtered.length > 0 ? (
-                            filtered.map(p => (
-                                <tr key={p.project_id} onClick={() => handleRowClick(p.project_id)} className="bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer">
-                                    <td className="p-3 font-medium">
-                                        <span className="hover:underline text-primary">{p.name}</span>
-                                        <span className="ml-2 text-muted-foreground">{p.code ? `· ${p.code}` : ''}</span>
-                                    </td>
-                                    <td className="p-3 text-muted-foreground">{p.city || '—'}, {p.country || '—'}</td>
-                                    <td className="p-3 capitalize"><Badge variant={getStatusVariant(p.status)}>{p.status}</Badge></td>
-                                    <td className="p-3 w-48">
-                                        <div className="flex items-center gap-2">
-                                            <Progress value={p.progress || 0} className="w-24 h-2" />
-                                            <span className="text-xs text-muted-foreground w-10 text-right">{p.progress || 0}%</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-3 text-right">{formatCurrency(p.budget, currency)}</td>
-                                    <td className="p-3"><VarianceBar value={Number(p.variance || 0)} ccy={currency} /></td>
-                                    <td className="p-3 text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={(e) => handleEditClick(e, p)}>
-                                                    <Edit className="mr-2 h-4 w-4" />
-                                                    Edit Project
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </td>
-                                </tr>
-                            ))
+                            filtered.map(p => {
+                                const spent = p.variance || 0; // This is actually the spent amount
+                                const budget = p.budget || 0;
+                                
+                                return (
+                                    <tr key={p.project_id} onClick={() => handleRowClick(p.project_id)} className="bg-white dark:bg-neutral-900 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-neutral-800 dark:hover:to-neutral-900 transition-all duration-200 cursor-pointer group">
+                                        <td className="p-4 font-medium">
+                                            <div className="flex flex-col">
+                                                <span className="hover:underline text-primary font-semibold text-base">{p.name}</span>
+                                                <span className="text-sm text-muted-foreground">{p.code ? `${p.code}` : 'No Code'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {p.city || '—'}
+                                                </span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {p.country || '—'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <Badge variant={getStatusVariant(p.status)} className="text-xs font-medium">
+                                                {p.status}
+                                            </Badge>
+                                        </td>
+                                        <td className="p-4 text-sm text-gray-600 dark:text-gray-400">
+                                            {(() => {
+                                                console.log('Rendering date for project:', p.name, 'start_date:', p.start_date);
+                                                if (p.start_date) {
+                                                    try {
+                                                        const date = new Date(p.start_date);
+                                                        console.log('Parsed date:', date);
+                                                        return date.toLocaleDateString();
+                                                    } catch (error) {
+                                                        console.error('Date parsing error:', error, 'for date:', p.start_date);
+                                                        return 'Invalid Date';
+                                                    }
+                                                }
+                                                return '—';
+                                            })()}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                {formatCurrency(budget, currency)}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                                                {formatCurrency(spent, currency)}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={(e) => handleEditClick(e, p)}>
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        Edit Project
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="7" className="text-center p-8 text-muted-foreground bg-white dark:bg-neutral-900">
-                                    No projects found.
+                                <td colSpan="7" className="text-center p-12 text-muted-foreground bg-white dark:bg-neutral-900">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                                            <PlusCircle className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">No projects found</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Get started by creating your first project</p>
+                                        </div>
+                                        <Link to="/projects/new">
+                                            <Button className="mt-2">
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Create Project
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         )}

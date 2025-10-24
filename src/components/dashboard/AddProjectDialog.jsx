@@ -40,6 +40,8 @@ const projectSchema = z.object({
   budget_currency: z.string().length(3, { message: 'Currency must be a 3-letter code (e.g., USD).' }).toUpperCase(),
   budget_total: z.coerce.number().min(0, { message: 'Opening balance cannot be negative.' }),
   start_date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format." }),
+  city: z.string().min(1, { message: 'City is required.' }),
+  country: z.string().min(1, { message: 'Country is required.' }),
 });
 
 const AddProjectDialog = ({ isOpen, onOpenChange }) => {
@@ -56,6 +58,8 @@ const AddProjectDialog = ({ isOpen, onOpenChange }) => {
       budget_currency: 'USD',
       budget_total: 0,
       start_date: new Date().toISOString().split('T')[0],
+      city: '',
+      country: '',
     },
   });
 
@@ -77,6 +81,8 @@ const AddProjectDialog = ({ isOpen, onOpenChange }) => {
           currency: values.budget_currency,
           budget_total: values.budget_total,
           start_date: values.start_date,
+          city: values.city,
+          country: values.country,
           owner_uuid: user.id,
           code: projectCode,
         })
@@ -180,6 +186,34 @@ const AddProjectDialog = ({ isOpen, onOpenChange }) => {
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., New York" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., United States" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
     import { useToast } from '@/components/ui/use-toast';
 
     import OverviewTab from '@/components/dashboard/details/OverviewTab.jsx';
-    import BudgetTab from '@/components/dashboard/details/BudgetTab.jsx';
+    import BudgetOverviewTab from '@/components/dashboard/details/BudgetOverviewTab.jsx';
     import SourcingPage from '@/pages/dashboard/SourcingPage.jsx';
     import MediaTab from '@/components/dashboard/site-monitoring/SiteMonitoringTab.jsx';
     import MilestonesTab from '@/components/dashboard/details/MilestonesTab.jsx';
@@ -135,7 +135,7 @@ import React, { useEffect, useState } from 'react';
                         <div className="mt-4">
                             <Routes>
                                 <Route path="overview" element={<OverviewTab project={project} onRefresh={handleProjectUpdated} />} />
-                                <Route path="budget" element={<BudgetTab project={project} />} />
+                                <Route path="budget" element={<BudgetOverviewTab project={project} />} />
                                 <Route path="sourcing" element={<SourcingPage />} />
                                 <Route path="media" element={<MediaTab project={project} />} />
                                 <Route path="milestones" element={<MilestonesTab project={project} />} />

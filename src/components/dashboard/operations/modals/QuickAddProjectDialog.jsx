@@ -27,6 +27,8 @@ import { Loader2 } from 'lucide-react';
 const projectSchema = z.object({
   name: z.string().min(3, 'Project name must be at least 3 characters.'),
   budget: z.coerce.number().positive('Budget must be a positive number.').optional().or(z.literal('')),
+  city: z.string().min(1, 'City is required.'),
+  country: z.string().min(1, 'Country is required.'),
 });
 
 const QuickAddProjectDialog = ({ isOpen, onOpenChange, onSuccess }) => {
@@ -38,6 +40,8 @@ const QuickAddProjectDialog = ({ isOpen, onOpenChange, onSuccess }) => {
     defaultValues: {
       name: '',
       budget: '',
+      city: '',
+      country: '',
     },
   });
 
@@ -50,6 +54,8 @@ const QuickAddProjectDialog = ({ isOpen, onOpenChange, onSuccess }) => {
         .insert({
           name: values.name,
           budget: values.budget || null,
+          city: values.city,
+          country: values.country,
           owner_id: profile.id,
           user_id: user.id,
         })
@@ -109,6 +115,34 @@ const QuickAddProjectDialog = ({ isOpen, onOpenChange, onSuccess }) => {
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., New York" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., United States" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

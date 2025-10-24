@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ProjectFilter from '@/components/ui/ProjectFilter';
+import { useProjectFilter } from '@/hooks/useProjectFilter';
 
 const FinancialLedgerPage = () => {
     const { t, i18n } = useTranslation();
@@ -20,6 +22,15 @@ const FinancialLedgerPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    
+    const {
+        projects,
+        selectedProject,
+        filteredData: filteredEntries,
+        handleProjectFilter,
+        clearFilter,
+        isFiltered
+    } = useProjectFilter(entries, 'project_code');
 
     const fetchLedgerEntries = useCallback(async () => {
         if (!user) return;
@@ -95,8 +106,20 @@ const FinancialLedgerPage = () => {
                     <motion.div variants={itemVariants}>
                         <Card>
                             <CardHeader>
-                                <CardTitle>All Transactions</CardTitle>
-                                <CardDescription>View, add, and manage all deposits and expenses.</CardDescription>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>All Transactions</CardTitle>
+                                        <CardDescription>View, add, and manage all deposits and expenses.</CardDescription>
+                                    </div>
+                                    <ProjectFilter
+                                        projects={projects}
+                                        selectedProject={selectedProject}
+                                        onProjectChange={handleProjectFilter}
+                                        onClearFilter={clearFilter}
+                                        filteredCount={filteredEntries.length}
+                                        totalCount={entries.length}
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 {loading ? (
@@ -112,7 +135,7 @@ const FinancialLedgerPage = () => {
                                         <AlertDescription>{error}</AlertDescription>
                                     </Alert>
                                 ) : (
-                                    <FinancialLedgerTable entries={entries} onAddEntry={() => setIsAddDialogOpen(true)} />
+                                    <FinancialLedgerTable entries={filteredEntries} onAddEntry={() => setIsAddDialogOpen(true)} />
                                 )}
                             </CardContent>
                         </Card>

@@ -9,7 +9,8 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Label } from '@/components/ui/label';
     import { Badge } from '@/components/ui/badge';
     import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-    import { Upload, Loader2, Users, RefreshCw, CheckCircle, Clock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+    import { Upload, Loader2, Users, RefreshCw, CheckCircle, Clock, MoreHorizontal, Edit, Trash2, Filter, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { motion } from 'framer-motion';
     import {
       DropdownMenu,
@@ -123,6 +124,23 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [deletingWorker, setDeletingWorker] = useState(null);
       const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
       const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+      const [projects, setProjects] = useState([]);
+      const [filteredProject, setFilteredProject] = useState('all');
+      const [filteredWorkers, setFilteredWorkers] = useState([]);
+
+      const fetchProjects = useCallback(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('projects')
+            .select('id, name, code')
+            .order('name', { ascending: true });
+
+          if (error) throw error;
+          setProjects(data || []);
+        } catch (err) {
+          console.error('Error fetching projects:', err);
+        }
+      }, []);
 
       const fetchWorkers = useCallback(async () => {
         setLoading(true);
@@ -158,9 +176,22 @@ import React, { useState, useEffect, useCallback } from 'react';
       }, []);
 
       useEffect(() => {
+        fetchProjects();
         fetchWorkers();
         fetchStagedCount();
-      }, [fetchWorkers, fetchStagedCount]);
+      }, [fetchProjects, fetchWorkers, fetchStagedCount]);
+
+      // Filter workers based on selected project
+      useEffect(() => {
+        if (filteredProject === 'all') {
+          setFilteredWorkers(workers);
+        } else {
+          const filtered = workers.filter(worker => 
+            worker.worker_projects?.some(wp => wp.project_code === filteredProject)
+          );
+          setFilteredWorkers(filtered);
+        }
+      }, [workers, filteredProject]);
 
       const handleProcessStagedData = async () => {
         setProcessing(true);
@@ -189,6 +220,14 @@ import React, { useState, useEffect, useCallback } from 'react';
       const handleDeleteClick = (worker) => {
         setDeletingWorker(worker);
         setIsDeleteDialogOpen(true);
+      };
+
+      const handleProjectFilter = (projectCode) => {
+        setFilteredProject(projectCode);
+      };
+
+      const clearFilter = () => {
+        setFilteredProject('all');
       };
 
       const getWorkerStatus = (worker) => {
@@ -225,12 +264,46 @@ import React, { useState, useEffect, useCallback } from 'react';
                 <h1 className="text-3xl font-bold tracking-tight">{t('Worker Directory', { ns: 'custom' })}</h1>
                 <p className="text-muted-foreground mt-1">{t('Manage your workforce, track their status, and handle payroll.', { ns: 'custom' })}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={filteredProject} onValueChange={handleProjectFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Filter by project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Projects</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.code}>
+                          {project.name} ({project.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {filteredProject !== 'all' && (
+                  <Button variant="outline" size="sm" onClick={clearFilter}>
+                    <X className="h-4 w-4 mr-1" />
+                    Clear
+                  </Button>
+                )}
                 <AddWorkerDialog onUpdate={handleRefresh} />
                 <ImportWorkersDialog onUpdate={handleRefresh} />
                 <Button onClick={handleRefresh} variant="ghost" size="icon" disabled={loading}><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></Button>
               </div>
             </div>
+
+            {filteredProject !== 'all' && (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Filter className="h-3 w-3" />
+                  Filtered by: {projects.find(p => p.code === filteredProject)?.name || filteredProject}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  Showing {filteredWorkers.length} of {workers.length} workers
+                </span>
+              </div>
+            )}
 
             {stagedCount > 0 && (
                 <Card className="bg-yellow-50 border-yellow-200">
@@ -278,8 +351,8 @@ import React, { useState, useEffect, useCallback } from 'react';
                                     <TableCell><div className="h-4 bg-gray-200 rounded w-16"></div></TableCell>
                                 </TableRow>
                                 ))
-                            ) : workers.length > 0 ? (
-                                workers.map(worker => {
+                            ) : filteredWorkers.length > 0 ? (
+                                filteredWorkers.map(worker => {
                                   const status = getWorkerStatus(worker);
                                   return (
                                     <TableRow key={worker.id}>
