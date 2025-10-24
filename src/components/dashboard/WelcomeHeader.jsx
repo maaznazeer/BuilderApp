@@ -21,14 +21,14 @@ const StatCard = ({ icon: Icon, value, label, link, color, isLoading }) => {
   }
 
   return (
-    <Link to={link} className="block hover:bg-muted/50 p-2 rounded-lg transition-colors">
-      <div className="flex items-center space-x-2">
-        <div className={`p-1.5 rounded-lg bg-opacity-10 ${color.bg}`}>
-          <Icon className={`h-4 w-4 ${color.text}`} />
+    <Link to={link} className="block hover:bg-muted/50 p-3 rounded-lg transition-colors">
+      <div className="flex items-center space-x-3">
+        <div className={`p-2 rounded-lg bg-opacity-10 ${color.bg}`}>
+          <Icon className={`h-6 w-6 ${color.text}`} />
         </div>
         <div>
-          <p className="text-lg font-bold">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-sm text-muted-foreground">{label}</p>
         </div>
       </div>
     </Link>

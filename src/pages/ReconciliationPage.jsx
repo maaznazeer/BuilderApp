@@ -72,45 +72,210 @@ const ReconciliationPage = () => {
         setReconciliationData(null);
 
         try {
-            // Get financial ledger data for the selected project and date range
-            const { data: ledgerData, error: ledgerError } = await supabase
-                .from('financial_ledger')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('project_code', projectToUse)
-                .gte('date', startDate)
-                .lte('date', endDate)
-                .order('date', { ascending: true });
+            console.log('=== RECONCILIATION DEBUG START ===');
+            console.log('Project to use:', projectToUse);
+            console.log('Date range:', startDate, 'to', endDate);
+            console.log('User ID:', user.id);
+            
+            // Get all financial data from multiple sources
+            console.log('Querying financial_ledger...');
+            
+            // First, let's get the project details to understand the ID format
+            const { data: projectData, error: projectError } = await supabase
+                .from('projects')
+                .select('id, code, name')
+                .or(`id.eq.${projectToUse},code.eq.${projectToUse}`)
+                .single();
+            
+            console.log('Project data:', projectData);
+            
+            if (projectError) {
+                console.error('Project lookup error:', projectError);
+                throw new Error(`Project not found: ${projectError.message}`);
+            }
+            
+            const projectId = projectData.id;
+            const projectCode = projectData.code;
+            
+            console.log('Using project ID:', projectId, 'and project code:', projectCode);
+            
+            const [ledgerResult, payrollResult, expensesResult, transactionsResult] = await Promise.all([
+                // Financial ledger entries (uses project_code)
+                supabase
+                    .from('financial_ledger')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('project_code', projectCode)
+                    .gte('date', startDate)
+                    .lte('date', endDate)
+                    .order('date', { ascending: true }),
+                
+                // Payroll entries (uses project_code)
+                supabase
+                    .from('payroll_entries')
+                    .select('*')
+                    .eq('project_code', projectCode)
+                    .gte('payment_date', startDate)
+                    .lte('payment_date', endDate)
+                    .order('payment_date', { ascending: true }),
+                
+                // Expenses (uses project_id)
+                supabase
+                    .from('expenses')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .gte('created_at', `${startDate}T00:00:00.000Z`)
+                    .lte('created_at', `${endDate}T23:59:59.999Z`)
+                    .order('created_at', { ascending: true }),
+                
+                // Financial transactions (uses project_id)
+                supabase
+                    .from('financial_transactions')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .gte('txn_date', startDate)
+                    .lte('txn_date', endDate)
+                    .order('txn_date', { ascending: true })
+            ]);
 
-            if (ledgerError) {
-                throw new Error(ledgerError.message);
+            // Log results for debugging
+            console.log('=== QUERY RESULTS ===');
+            console.log('Financial Ledger Result:', ledgerResult);
+            console.log('Payroll Result:', payrollResult);
+            console.log('Expenses Result:', expensesResult);
+            console.log('Financial Transactions Result:', transactionsResult);
+
+            // Check for errors
+            if (ledgerResult.error) {
+                console.error('Ledger error:', ledgerResult.error);
+                throw new Error(`Ledger error: ${ledgerResult.error.message}`);
+            }
+            if (payrollResult.error) {
+                console.error('Payroll error:', payrollResult.error);
+                throw new Error(`Payroll error: ${payrollResult.error.message}`);
+            }
+            if (expensesResult.error) {
+                console.error('Expenses error:', expensesResult.error);
+                throw new Error(`Expenses error: ${expensesResult.error.message}`);
+            }
+            if (transactionsResult.error) {
+                console.error('Transactions error:', transactionsResult.error);
+                throw new Error(`Transactions error: ${transactionsResult.error.message}`);
             }
 
-            if (!ledgerData || ledgerData.length === 0) {
+            // Combine all financial data
+            const allTransactions = [];
+            
+            console.log('=== PROCESSING DATA ===');
+            console.log('Ledger data count:', ledgerResult.data?.length || 0);
+            console.log('Payroll data count:', payrollResult.data?.length || 0);
+            console.log('Expenses data count:', expensesResult.data?.length || 0);
+            console.log('Transactions data count:', transactionsResult.data?.length || 0);
+            
+            // Add ledger entries
+            if (ledgerResult.data) {
+                console.log('Processing ledger entries:', ledgerResult.data);
+                ledgerResult.data.forEach(entry => {
+                    allTransactions.push({
+                        id: entry.id,
+                        date: entry.date,
+                        type: 'ledger',
+                        description: entry.reason_for_expense || entry.comment || 'Ledger Entry',
+                        amount: entry.amount_to_be_received || -entry.expense_amount,
+                        category: entry.expense_category || 'General',
+                        source: 'financial_ledger'
+                    });
+                });
+            }
+            
+            // Add payroll entries
+            if (payrollResult.data) {
+                console.log('Processing payroll entries:', payrollResult.data);
+                payrollResult.data.forEach(entry => {
+                    allTransactions.push({
+                        id: entry.id,
+                        date: entry.payment_date,
+                        type: 'payroll',
+                        description: `Payroll - ${entry.worker_code}`,
+                        amount: -entry.total_amount, // Payroll is an expense
+                        category: 'Payroll',
+                        source: 'payroll_entries'
+                    });
+                });
+            }
+            
+            // Add expenses
+            if (expensesResult.data) {
+                expensesResult.data.forEach(entry => {
+                    allTransactions.push({
+                        id: entry.id,
+                        date: entry.created_at.split('T')[0],
+                        type: 'expense',
+                        description: entry.category,
+                        amount: -entry.amount, // Expenses are negative
+                        category: entry.category,
+                        source: 'expenses'
+                    });
+                });
+            }
+            
+            // Add financial transactions
+            if (transactionsResult.data) {
+                transactionsResult.data.forEach(entry => {
+                    allTransactions.push({
+                        id: entry.id,
+                        date: entry.txn_date,
+                        type: entry.txn_type,
+                        description: entry.description || entry.counterparty,
+                        amount: entry.amount * (entry.txn_type === 'income' ? 1 : -1),
+                        category: entry.category,
+                        source: 'financial_transactions'
+                    });
+                });
+            }
+
+            console.log('=== FINAL TRANSACTION COUNT ===');
+            console.log('Total transactions found:', allTransactions.length);
+            console.log('All transactions:', allTransactions);
+
+            if (allTransactions.length === 0) {
+                console.log('=== NO DATA FOUND ===');
+                console.log('This means no transactions were found in any of the tables for the given criteria.');
+                console.log('Check the query results above to see what data was returned from each table.');
                 setReconciliationData(null);
-                toast({ title: 'No Data', description: 'No financial transactions found for the selected criteria.' });
+                toast({ 
+                    title: 'No Data', 
+                    description: 'No financial transactions found for the selected criteria. Check console for detailed debugging info.' 
+                });
                 return;
             }
 
             // Calculate reconciliation data
             const reconciliation = {
-                project_code: projectToUse,
+                project_id: projectId,
+                project_code: projectCode,
+                project_name: projectData.name,
                 period_start: startDate,
                 period_end: endDate,
                 total_deposits: 0,
                 total_expenses: 0,
                 net_balance: 0,
-                transaction_count: ledgerData.length,
-                transactions: ledgerData
+                transaction_count: allTransactions.length,
+                transactions: allTransactions,
+                data_sources: {
+                    ledger: ledgerResult.data?.length || 0,
+                    payroll: payrollResult.data?.length || 0,
+                    expenses: expensesResult.data?.length || 0,
+                    transactions: transactionsResult.data?.length || 0
+                }
             };
 
-            // Calculate totals
-            ledgerData.forEach(entry => {
-                if (entry.amount_to_be_received > 0) {
-                    reconciliation.total_deposits += entry.amount_to_be_received;
-                }
-                if (entry.expense_amount > 0) {
-                    reconciliation.total_expenses += entry.expense_amount;
+            // Calculate totals from all transactions
+            allTransactions.forEach(transaction => {
+                if (transaction.amount > 0) {
+                    reconciliation.total_deposits += transaction.amount;
+                } else {
+                    reconciliation.total_expenses += Math.abs(transaction.amount);
                 }
             });
 
@@ -118,6 +283,13 @@ const ReconciliationPage = () => {
 
             setReconciliationData(reconciliation);
             console.log('Reconciliation data calculated:', reconciliation);
+            console.log('Data sources breakdown:', {
+                ledger: ledgerResult.data?.length || 0,
+                payroll: payrollResult.data?.length || 0,
+                expenses: expensesResult.data?.length || 0,
+                transactions: transactionsResult.data?.length || 0,
+                total: allTransactions.length
+            });
         } catch (error) {
             console.error('Error calculating reconciliation:', error);
             toast({ variant: 'destructive', title: 'Error calculating reconciliation', description: error.message });
@@ -383,7 +555,7 @@ const ReconciliationPage = () => {
                     >
                         <Card className="mt-6">
                             <CardHeader>
-                                <CardTitle>Reconciliation Preview for {selectedProject}</CardTitle>
+                                <CardTitle>Reconciliation Preview for {reconciliationData?.project_name || selectedProject}</CardTitle>
                                 <CardDescription>From {format(new Date(startDate), 'PPP')} to {format(new Date(endDate), 'PPP')}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-6">
@@ -411,6 +583,31 @@ const ReconciliationPage = () => {
                                             <span className="font-bold text-xl text-blue-600">{formatCurrency(reconciliationData.net_balance)}</span>
                                         </div>
                                     </div>
+                                    
+                                    {/* Data Sources Section */}
+                                    {reconciliationData.data_sources && (
+                                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                            <h4 className="font-semibold text-gray-800 mb-3">Data Sources</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                    <span>Ledger: {reconciliationData.data_sources.ledger}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                    <span>Payroll: {reconciliationData.data_sources.payroll}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                                    <span>Expenses: {reconciliationData.data_sources.expenses}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                                    <span>Transactions: {reconciliationData.data_sources.transactions}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                     
                                     <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
                                         <div className="flex items-center gap-3">

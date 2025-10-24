@@ -105,9 +105,9 @@ const ProjectSettingsPage = () => {
                 
                 {!loading && selectedProject && (
                     <Tabs defaultValue="general" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+                        <TabsList className="grid w-full grid-cols-1 md:w-[400px]">
                             <TabsTrigger value="general"><Settings className="mr-2 h-4 w-4"/>General</TabsTrigger>
-                            <TabsTrigger value="alerts"><AlertCircle className="mr-2 h-4 w-4"/>Alerts</TabsTrigger>
+                            {/* <TabsTrigger value="alerts"><AlertCircle className="mr-2 h-4 w-4"/>Alerts</TabsTrigger> */}
                         </TabsList>
                         <motion.div
                             variants={containerVariants}

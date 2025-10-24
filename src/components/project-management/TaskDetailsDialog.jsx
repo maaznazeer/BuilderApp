@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Clock, User, DollarSign, FileText, CheckCircle, AlertCircle, Play, Pause } from 'lucide-react';
+import { Calendar, Clock, User, DollarSign, FileText, CheckCircle, AlertCircle, Play, Pause, Users, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/customSupabaseClient';
 
@@ -12,12 +12,23 @@ const TaskDetailsDialog = ({ isOpen, onClose, task, activeTimer, onToggleTimer, 
     console.log('TaskDetailsDialog rendered with:', { isOpen, task: task?.task_name });
     const [workerDetails, setWorkerDetails] = useState(null);
     const [loadingWorker, setLoadingWorker] = useState(false);
+    const [taskResources, setTaskResources] = useState([]);
+    const [taskMaterials, setTaskMaterials] = useState([]);
+    const [loadingResources, setLoadingResources] = useState(false);
+    const [loadingMaterials, setLoadingMaterials] = useState(false);
 
     useEffect(() => {
         if (task?.assigned_worker_code) {
             fetchWorkerDetails();
         }
     }, [task?.assigned_worker_code]);
+
+    useEffect(() => {
+        if (task?.task_id) {
+            fetchTaskResources();
+            fetchTaskMaterials();
+        }
+    }, [task?.task_id]);
 
     const fetchWorkerDetails = async () => {
         if (!task?.assigned_worker_code) return;
@@ -44,6 +55,69 @@ const TaskDetailsDialog = ({ isOpen, onClose, task, activeTimer, onToggleTimer, 
             // Keep workerDetails as null to show the error message
         } finally {
             setLoadingWorker(false);
+        }
+    };
+
+    const fetchTaskResources = async () => {
+        if (!task?.task_id) return;
+        
+        setLoadingResources(true);
+        try {
+            const { data, error } = await supabase
+                .from('task_assignments')
+                .select(`
+                    *,
+                    resources (
+                        resource_id,
+                        resource_name,
+                        type,
+                        hourly_rate
+                    )
+                `)
+                .eq('task_id', task.task_id);
+
+            if (error) throw error;
+            setTaskResources(data || []);
+        } catch (error) {
+            console.error('Error fetching task resources:', error);
+            setTaskResources([]);
+        } finally {
+            setLoadingResources(false);
+        }
+    };
+
+    const fetchTaskMaterials = async () => {
+        if (!task?.task_id) return;
+        
+        setLoadingMaterials(true);
+        try {
+            console.log('Fetching materials for task:', task.task_id);
+            const { data, error } = await supabase
+                .from('task_materials')
+                .select(`
+                    *,
+                    materials (
+                        id,
+                        name,
+                        unit_cost,
+                        quantity,
+                        supplier_id
+                    )
+                `)
+                .eq('task_id', task.task_id);
+
+            if (error) {
+                console.error('Supabase error fetching task materials:', error);
+                throw error;
+            }
+            
+            console.log('Task materials data:', data);
+            setTaskMaterials(data || []);
+        } catch (error) {
+            console.error('Error fetching task materials:', error);
+            setTaskMaterials([]);
+        } finally {
+            setLoadingMaterials(false);
         }
     };
 
@@ -252,6 +326,107 @@ const TaskDetailsDialog = ({ isOpen, onClose, task, activeTimer, onToggleTimer, 
                                 <span>Total Estimated Cost:</span>
                                 <span className="text-lg">{formatCurrency((task.estimated_labor_cost || 0) + (task.estimated_material_cost || 0))}</span>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Task Resources */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Users className="w-5 h-5" />
+                                Assigned Resources
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {loadingResources ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    <span className="text-sm">Loading resources...</span>
+                                </div>
+                            ) : taskResources.length > 0 ? (
+                                <div className="space-y-3">
+                                    {taskResources.map((assignment, index) => (
+                                        <div key={assignment.id || index} className="p-3 border rounded-md">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">{assignment.resources?.resource_name}</span>
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {assignment.resources?.type}
+                                                    </Badge>
+                                                </div>
+                                                <span className="text-sm font-medium">
+                                                    {assignment.allocation_percent}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                Hourly Rate: {formatCurrency(assignment.resources?.hourly_rate || 0)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-muted-foreground">
+                                    No resources assigned to this task
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Task Materials */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Package className="w-5 h-5" />
+                                Required Materials
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {/* Debug info */}
+                            <div className="text-xs text-gray-500 mb-2">
+                                Debug: {taskMaterials.length} materials found
+                            </div>
+                            
+                            {loadingMaterials ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    <span className="text-sm">Loading materials...</span>
+                                </div>
+                            ) : taskMaterials.length > 0 ? (
+                                <div className="space-y-3">
+                                    {console.log('Rendering materials:', taskMaterials)}
+                                    {taskMaterials.map((material, index) => {
+                                        console.log('Material item:', material);
+                                        return (
+                                            <div key={material.id || index} className="p-3 border rounded-md">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium">{material.materials?.name || 'Unknown Material'}</span>
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {material.unit || 'unit'}
+                                                        </Badge>
+                                                    </div>
+                                                    <span className="text-sm font-medium">
+                                                        {material.quantity_planned} {material.unit}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    Unit Cost: {formatCurrency(material.materials?.unit_cost || 0)} | 
+                                                    Total Cost: {formatCurrency((material.quantity_planned || 0) * (material.materials?.unit_cost || 0))}
+                                                </div>
+                                                {material.notes && (
+                                                    <div className="text-xs text-muted-foreground mt-1">
+                                                        Notes: {material.notes}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-muted-foreground">
+                                    No materials assigned to this task
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

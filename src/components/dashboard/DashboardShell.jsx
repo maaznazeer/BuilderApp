@@ -34,9 +34,9 @@ export default function DashboardShell({ children, active }) {
   const items = [
     ['Overview', '/dashboard/overview'],
     ['Projects', '/dashboard/projects'],
-    ['Workforce', '/dashboard/workforce'],
+    // ['Workforce', '/dashboard/workforce'],
     canSeeFinancials && ['Financials', '/dashboard/financials'],
-    ['Supply Chain', '/dashboard/supply-chain'],
+    // ['Supply Chain', '/dashboard/supply-chain'],
     ['Alerts', '/dashboard/alerts'],
   ].filter(Boolean);
 
