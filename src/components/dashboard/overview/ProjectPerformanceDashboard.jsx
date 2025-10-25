@@ -238,29 +238,46 @@ const ProjectPerformanceDashboard = () => {
                         {performanceData.map((projectData, index) => {
                             const { project, budgetData, varianceData, healthScore, status } = projectData;
                             
+                            // Fallback for undefined values
+                            const safeStatus = status || { status: 'unknown', color: 'text-gray-600', bgColor: 'bg-gray-50' };
+                            const safeHealthScore = healthScore || 0;
+                            const safeBudgetData = budgetData || { budgetPercentage: 0, totalSpent: 0, budgetTotal: 0 };
+                            const safeVarianceData = varianceData || { 
+                                variancePercentages: { total: 0 },
+                                variances: { total: 0 }
+                            };
+                            const safeProjectData = {
+                                taskCompletionRate: projectData.taskCompletionRate || 0,
+                                milestoneCompletionRate: projectData.milestoneCompletionRate || 0,
+                                completedTasks: projectData.completedTasks || 0,
+                                totalTasks: projectData.totalTasks || 0,
+                                completedMilestones: projectData.completedMilestones || 0,
+                                totalMilestones: projectData.totalMilestones || 0
+                            };
+                            
                             return (
                                 <motion.div
                                     key={project.id}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className={`p-6 border rounded-lg ${status.bgColor}`}
+                                    className={`p-6 border rounded-lg ${safeStatus.bgColor}`}
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-3">
                                             <h3 className="text-lg font-semibold">{project.name}</h3>
-                                            {getStatusIcon(status.status)}
+                                            {getStatusIcon(safeStatus.status)}
                                             <Badge 
-                                                variant={status.status === 'exceeded' ? 'destructive' : 
-                                                       status.status === 'excellent' ? 'default' : 'secondary'}
+                                                variant={safeStatus.status === 'exceeded' ? 'destructive' : 
+                                                       safeStatus.status === 'excellent' ? 'default' : 'secondary'}
                                             >
-                                                {status.status}
+                                                {safeStatus.status}
                                             </Badge>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm text-muted-foreground">Health Score</p>
-                                            <p className={`text-2xl font-bold ${status.color}`}>
-                                                {healthScore.toFixed(0)}%
+                                            <p className={`text-2xl font-bold ${safeStatus.color}`}>
+                                                {safeHealthScore.toFixed(0)}%
                                             </p>
                                         </div>
                                     </div>
@@ -275,14 +292,14 @@ const ProjectPerformanceDashboard = () => {
                                             {budgetData ? (
                                                 <>
                                                     <div className="text-sm text-muted-foreground mb-1">
-                                                        {budgetData.budgetPercentage.toFixed(1)}% used
+                                                        {safeBudgetData.budgetPercentage.toFixed(1)}% used
                                                     </div>
                                                     <Progress 
-                                                        value={Math.min(budgetData.budgetPercentage, 100)} 
+                                                        value={Math.min(safeBudgetData.budgetPercentage, 100)} 
                                                         className="h-2 mb-2"
                                                     />
                                                     <div className="text-xs text-muted-foreground">
-                                                        {formatCurrency(budgetData.totalSpent)} / {formatCurrency(budgetData.budgetTotal)}
+                                                        {formatCurrency(safeBudgetData.totalSpent)} / {formatCurrency(safeBudgetData.budgetTotal)}
                                                     </div>
                                                 </>
                                             ) : (
@@ -297,11 +314,11 @@ const ProjectPerformanceDashboard = () => {
                                                 <span className="text-sm font-medium">Tasks</span>
                                             </div>
                                             <div className="text-sm text-muted-foreground mb-1">
-                                                {projectData.taskCompletionRate.toFixed(1)}% complete
+                                                {safeProjectData.taskCompletionRate.toFixed(1)}% complete
                                             </div>
-                                            <Progress value={projectData.taskCompletionRate} className="h-2 mb-2" />
+                                            <Progress value={safeProjectData.taskCompletionRate} className="h-2 mb-2" />
                                             <div className="text-xs text-muted-foreground">
-                                                {projectData.completedTasks} / {projectData.totalTasks} tasks
+                                                {safeProjectData.completedTasks} / {safeProjectData.totalTasks} tasks
                                             </div>
                                         </div>
 
@@ -312,11 +329,11 @@ const ProjectPerformanceDashboard = () => {
                                                 <span className="text-sm font-medium">Milestones</span>
                                             </div>
                                             <div className="text-sm text-muted-foreground mb-1">
-                                                {projectData.milestoneCompletionRate.toFixed(1)}% complete
+                                                {safeProjectData.milestoneCompletionRate.toFixed(1)}% complete
                                             </div>
-                                            <Progress value={projectData.milestoneCompletionRate} className="h-2 mb-2" />
+                                            <Progress value={safeProjectData.milestoneCompletionRate} className="h-2 mb-2" />
                                             <div className="text-xs text-muted-foreground">
-                                                {projectData.completedMilestones} / {projectData.totalMilestones} milestones
+                                                {safeProjectData.completedMilestones} / {safeProjectData.totalMilestones} milestones
                                             </div>
                                         </div>
 
@@ -329,13 +346,13 @@ const ProjectPerformanceDashboard = () => {
                                             {varianceData ? (
                                                 <>
                                                     <div className={`text-sm font-medium ${
-                                                        varianceData.variances.total > 0 ? 'text-red-600' : 'text-green-600'
+                                                        safeVarianceData.variances.total > 0 ? 'text-red-600' : 'text-green-600'
                                                     }`}>
-                                                        {varianceData.variancePercentages.total > 0 ? '+' : ''}
-                                                        {varianceData.variancePercentages.total.toFixed(1)}%
+                                                        {safeVarianceData.variancePercentages.total > 0 ? '+' : ''}
+                                                        {safeVarianceData.variancePercentages.total.toFixed(1)}%
                                                     </div>
                                                     <div className="text-xs text-muted-foreground">
-                                                        {formatCurrency(varianceData.variances.total)}
+                                                        {formatCurrency(safeVarianceData.variances.total)}
                                                     </div>
                                                 </>
                                             ) : (

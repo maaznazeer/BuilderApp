@@ -86,16 +86,16 @@ const ProjectSettingsPage = () => {
     return (
         <>
             <Helmet>
-                <title>{t('projectSettings.title')} - DomusBuilder Hub</title>
-                <meta name="description" content={t('projectSettings.description')} />
+                <title>{t('Project Settings')} - DomusBuilder Hub</title>
+                <meta name="description" content={t('Manage your project settings and preferences.')} />
             </Helmet>
             <div className="p-4 sm:p-6 lg:p-8 space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t('projectSettings.title')}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t('Project Settings')}</h1>
                     <p className="mt-2 text-lg text-gray-600">
                         {selectedProject 
-                            ? `${t('projectSettings.managing')} "${selectedProject.name}" (${selectedProject.code || selectedProject.project_code})`
-                            : t('projectSettings.description')
+                            ? `${t('Managing')} "${selectedProject.name}" (${selectedProject.code || selectedProject.project_code})`
+                            : t('Manage your project settings and preferences.')
                         }
                     </p>
                 </div>

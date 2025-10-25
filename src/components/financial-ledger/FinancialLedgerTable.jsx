@@ -15,10 +15,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, ArrowUpDown, PlusCircle, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, PlusCircle, Download, AlertTriangle, CheckCircle, Edit, Trash2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useBudgetTracking } from '@/hooks/useBudgetTracking';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/customSupabaseClient';
 
 // Component to show budget status for a single entry
 const BudgetStatusCell = ({ entry }) => {
@@ -62,9 +64,14 @@ const BudgetStatusCell = ({ entry }) => {
   );
 };
 
-export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
+export const FinancialLedgerTable = ({ entries, onAddEntry, onEntryUpdated }) => {
   const [filter, setFilter] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'descending' });
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const formatCurrency = (amount, currency) => {
     if (amount === null || amount === undefined) return '-';
@@ -109,6 +116,81 @@ export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
   const getSortIndicator = (key) => {
     if (sortConfig.key !== key) return null;
     return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+  };
+
+  const handleEdit = (entry) => {
+    setSelectedEntry(entry);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (entry) => {
+    setSelectedEntry(entry);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleView = (entry) => {
+    setSelectedEntry(entry);
+    setIsViewDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedEntry) return;
+    
+    try {
+      const { error } = await supabase
+        .from('financial_ledger')
+        .delete()
+        .eq('id', selectedEntry.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Entry Deleted',
+        description: 'Financial ledger entry has been deleted successfully.',
+      });
+
+      if (onEntryUpdated) onEntryUpdated();
+      setIsDeleteDialogOpen(false);
+      setSelectedEntry(null);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error deleting entry',
+        description: error.message,
+      });
+    }
+  };
+
+  const handleEditSuccess = () => {
+    if (onEntryUpdated) onEntryUpdated();
+    setIsEditDialogOpen(false);
+    setSelectedEntry(null);
+  };
+
+  const handleEditSubmit = async (formData) => {
+    if (!selectedEntry) return;
+    
+    try {
+      const { error } = await supabase
+        .from('financial_ledger')
+        .update(formData)
+        .eq('id', selectedEntry.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Entry Updated',
+        description: 'Financial ledger entry has been updated successfully.',
+      });
+
+      handleEditSuccess();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error updating entry',
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -190,9 +272,18 @@ export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Entry</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleView(entry)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(entry)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Entry
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(entry)} className="text-red-500">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -201,6 +292,249 @@ export const FinancialLedgerTable = ({ entries, onAddEntry }) => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {isDeleteDialogOpen && selectedEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this financial ledger entry? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setSelectedEntry(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Dialog */}
+      {isViewDialogOpen && selectedEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Entry Details</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Date</label>
+                  <p className="text-sm">{format(new Date(selectedEntry.date), 'dd MMM yyyy')}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Project Code</label>
+                  <p className="text-sm">{selectedEntry.project_code}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Currency</label>
+                  <p className="text-sm">{selectedEntry.currency}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Entry Type</label>
+                  <p className="text-sm">{selectedEntry.expense_amount > 0 ? 'Expense' : 'Deposit'}</p>
+                </div>
+              </div>
+              
+              {selectedEntry.amount_after_fees > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Deposit Amount</label>
+                  <p className="text-sm text-green-600">{formatCurrency(selectedEntry.amount_after_fees, selectedEntry.currency)}</p>
+                </div>
+              )}
+              
+              {selectedEntry.expense_amount > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Expense Amount</label>
+                  <p className="text-sm text-red-600">{formatCurrency(selectedEntry.expense_amount, selectedEntry.currency)}</p>
+                </div>
+              )}
+              
+              {selectedEntry.reason_for_expense && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Reason for Expense</label>
+                  <p className="text-sm">{selectedEntry.reason_for_expense}</p>
+                </div>
+              )}
+              
+              {selectedEntry.expense_category && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Expense Category</label>
+                  <p className="text-sm">{selectedEntry.expense_category}</p>
+                </div>
+              )}
+              
+              {selectedEntry.comment && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Comment</label>
+                  <p className="text-sm">{selectedEntry.comment}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsViewDialogOpen(false);
+                  setSelectedEntry(null);
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      {isEditDialogOpen && selectedEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Edit Entry</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const data = {
+                date: formData.get('date'),
+                project_code: formData.get('project_code'),
+                comment: formData.get('comment'),
+                amount_after_fees: formData.get('amount_after_fees') ? parseFloat(formData.get('amount_after_fees')) : null,
+                expense_amount: formData.get('expense_amount') ? parseFloat(formData.get('expense_amount')) : null,
+                reason_for_expense: formData.get('reason_for_expense'),
+                expense_category: formData.get('expense_category'),
+                currency: formData.get('currency')
+              };
+              handleEditSubmit(data);
+            }}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      defaultValue={selectedEntry.date}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Project Code</label>
+                    <input
+                      type="text"
+                      name="project_code"
+                      defaultValue={selectedEntry.project_code}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Currency</label>
+                    <select
+                      name="currency"
+                      defaultValue={selectedEntry.currency}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Entry Type</label>
+                    <p className="text-sm text-gray-600">
+                      {selectedEntry.expense_amount > 0 ? 'Expense' : 'Deposit'}
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedEntry.amount_after_fees > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Deposit Amount</label>
+                    <input
+                      type="number"
+                      name="amount_after_fees"
+                      defaultValue={selectedEntry.amount_after_fees}
+                      step="0.01"
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+                )}
+                
+                {selectedEntry.expense_amount > 0 && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Expense Amount</label>
+                      <input
+                        type="number"
+                        name="expense_amount"
+                        defaultValue={selectedEntry.expense_amount}
+                        step="0.01"
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Reason for Expense</label>
+                      <input
+                        type="text"
+                        name="reason_for_expense"
+                        defaultValue={selectedEntry.reason_for_expense}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Expense Category</label>
+                      <input
+                        type="text"
+                        name="expense_category"
+                        defaultValue={selectedEntry.expense_category}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Comment</label>
+                  <textarea
+                    name="comment"
+                    defaultValue={selectedEntry.comment}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedEntry(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Update Entry
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

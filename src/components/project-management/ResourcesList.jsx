@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit2, User, Truck, Building, Box, DollarSign } from 'lucide-react';
+import { Edit2, User, Truck, Building, Box, DollarSign, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -17,7 +17,7 @@ const ResourceIcon = ({ type }) => {
     return icons[type] || <User className="h-4 w-4" />;
 };
 
-const ResourcesList = ({ resources, loading, onSelectResource, selectedResourceId, onEditResource, canEdit }) => {
+const ResourcesList = ({ resources, loading, onSelectResource, selectedResourceId, onEditResource, onDeleteResource, canEdit }) => {
     return (
         <Card className="h-full flex flex-col">
             <CardHeader>
@@ -55,9 +55,14 @@ const ResourcesList = ({ resources, loading, onSelectResource, selectedResourceI
                                                 {resource.active ? 'Active' : 'Inactive'}
                                             </Badge>
                                             {canEdit && (
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onEditResource(resource); }}>
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex items-center gap-1">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onEditResource(resource); }}>
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); onDeleteResource(resource); }}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             )}
                                         </div>
                                     </li>

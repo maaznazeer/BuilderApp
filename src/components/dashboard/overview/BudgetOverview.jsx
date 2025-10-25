@@ -37,6 +37,17 @@ const BudgetOverview = () => {
             // For each project, calculate spending
             const projectsWithBudget = await Promise.all(
                 projectsData.map(async (project) => {
+                    // Skip projects without code to avoid undefined errors
+                    if (!project.code) {
+                        console.warn(`BudgetOverview - Skipping project ${project.name} - no code field`);
+                        return {
+                            ...project,
+                            totalSpent: 0,
+                            remainingBudget: project.budget_total || 0,
+                            budgetPercentage: 0
+                        };
+                    }
+
                     const [
                         payrollResult,
                         expensesResult,

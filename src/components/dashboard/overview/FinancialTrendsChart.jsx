@@ -30,13 +30,17 @@ const FinancialTrendsChart = () => {
             // Fetch financial ledger data with correct column names
             const { data: ledgerData, error: ledgerError } = await supabase
                 .from('financial_ledger')
-                .select('date, expense_amount, amount_to_be_received, entry_type')
-                .eq('user_id', user.id)
+                .select('date, expense_amount, amount_to_be_received')
                 .gte('date', startDate.toISOString().split('T')[0])
                 .lte('date', endDate.toISOString().split('T')[0])
                 .order('date', { ascending: true });
 
-            if (ledgerError) throw ledgerError;
+            if (ledgerError) {
+                console.error('FinancialTrendsChart - Error fetching ledger data:', ledgerError);
+                throw ledgerError;
+            }
+
+            console.log('FinancialTrendsChart - Ledger data:', ledgerData);
 
             // Fetch payroll data
             const { data: payrollData, error: payrollError } = await supabase
@@ -46,7 +50,12 @@ const FinancialTrendsChart = () => {
                 .lte('payment_date', endDate.toISOString().split('T')[0])
                 .order('payment_date', { ascending: true });
 
-            if (payrollError) throw payrollError;
+            if (payrollError) {
+                console.error('FinancialTrendsChart - Error fetching payroll data:', payrollError);
+                throw payrollError;
+            }
+
+            console.log('FinancialTrendsChart - Payroll data:', payrollData);
 
             // Fetch expenses data
             const { data: expensesData, error: expensesError } = await supabase
@@ -56,10 +65,16 @@ const FinancialTrendsChart = () => {
                 .lte('created_at', endDate.toISOString())
                 .order('created_at', { ascending: true });
 
-            if (expensesError) throw expensesError;
+            if (expensesError) {
+                console.error('FinancialTrendsChart - Error fetching expenses:', expensesError);
+                throw expensesError;
+            }
+
+            console.log('FinancialTrendsChart - Expenses data:', expensesData);
 
             // Process and combine data
             const processedData = processFinancialData(ledgerData, payrollData, expensesData);
+            console.log('FinancialTrendsChart - Processed data:', processedData);
             setTrendData(processedData);
 
         } catch (error) {
@@ -70,6 +85,12 @@ const FinancialTrendsChart = () => {
     };
 
     const processFinancialData = (ledgerData, payrollData, expensesData) => {
+        console.log('FinancialTrendsChart - Processing data:', {
+            ledgerCount: ledgerData?.length || 0,
+            payrollCount: payrollData?.length || 0,
+            expensesCount: expensesData?.length || 0
+        });
+
         const dataMap = new Map();
 
         // Process ledger data
@@ -83,11 +104,13 @@ const FinancialTrendsChart = () => {
             // Add income (deposits)
             if (entry.amount_to_be_received > 0) {
                 dayData.income += entry.amount_to_be_received || 0;
+                console.log(`FinancialTrendsChart - Added income ${entry.amount_to_be_received} for ${date}`);
             }
             
             // Add expenses
             if (entry.expense_amount > 0) {
                 dayData.expenses += entry.expense_amount || 0;
+                console.log(`FinancialTrendsChart - Added expense ${entry.expense_amount} for ${date}`);
             }
         });
 
@@ -99,6 +122,7 @@ const FinancialTrendsChart = () => {
             }
             const dayData = dataMap.get(date);
             dayData.payroll += entry.total_amount || 0;
+            console.log(`FinancialTrendsChart - Added payroll ${entry.total_amount} for ${date}`);
         });
 
         // Process expenses data
@@ -109,21 +133,24 @@ const FinancialTrendsChart = () => {
             }
             const dayData = dataMap.get(date);
             dayData.expenses += entry.amount || 0;
+            console.log(`FinancialTrendsChart - Added expense ${entry.amount} for ${date}`);
         });
 
         // Convert to array and calculate running totals
         const result = Array.from(dataMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
         
+        console.log('FinancialTrendsChart - Raw data before processing:', result);
+        
         let runningIncome = 0;
         let runningExpenses = 0;
         let runningPayroll = 0;
 
-        return result.map(day => {
+        const finalData = result.map(day => {
             runningIncome += day.income;
             runningExpenses += day.expenses;
             runningPayroll += day.payroll;
             
-            return {
+            const processedDay = {
                 ...day,
                 runningIncome,
                 runningExpenses,
@@ -131,7 +158,13 @@ const FinancialTrendsChart = () => {
                 netFlow: runningIncome - runningExpenses - runningPayroll,
                 totalSpent: runningExpenses + runningPayroll
             };
+            
+            console.log(`FinancialTrendsChart - Processed day ${day.date}:`, processedDay);
+            return processedDay;
         });
+
+        console.log('FinancialTrendsChart - Final processed data:', finalData);
+        return finalData;
     };
 
     const formatCurrency = (amount) => {
@@ -212,7 +245,10 @@ const FinancialTrendsChart = () => {
                     {trendData.length === 0 ? (
                         <div className="text-center py-8">
                             <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">No financial data available for the selected period.</p>
+                            <p className="text-muted-foreground mb-2">No financial data available for the selected period.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Add financial data through Financial Ledger, Payroll, or Expenses to see trends.
+                            </p>
                         </div>
                     ) : (
                         <div className="h-80">

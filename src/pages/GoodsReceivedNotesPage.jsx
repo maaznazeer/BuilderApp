@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Edit, Trash2, CheckCircle, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import DeleteConfirmationDialog from '@/components/ui/DeleteConfirmationDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -140,6 +141,9 @@ const GoodsReceivedNotesPage = () => {
     const [loading, setLoading] = useState(true);
     const [openForm, setOpenForm] = useState(false);
     const [selectedGrn, setSelectedGrn] = useState(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletingGrn, setDeletingGrn] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchGrns = useCallback(async () => {
         setLoading(true);
@@ -175,11 +179,94 @@ const GoodsReceivedNotesPage = () => {
 
     const handleEdit = (grn) => { setSelectedGrn(grn); setOpenForm(true); };
     const handleAdd = () => { setSelectedGrn(null); setOpenForm(true); };
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure?")) return;
-        const { error } = await supabase.from('grn').delete().eq('id', id);
-        if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
-        else { toast({ title: 'Success', description: 'GRN deleted.' }); fetchGrns(); }
+    
+    const handleDelete = (grn) => {
+        setDeletingGrn(grn);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingGrn) return;
+        
+        setIsDeleting(true);
+        try {
+            // Check if GRN is referenced in any inventory transactions
+            const { data: inventoryRefs, error: inventoryError } = await supabase
+                .from('inventory_transactions')
+                .select('id')
+                .eq('grn_id', deletingGrn.id)
+                .limit(1);
+
+            if (inventoryError) {
+                console.log('Error checking inventory references:', inventoryError.message);
+            } else if (inventoryRefs && inventoryRefs.length > 0) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Cannot Delete GRN',
+                    description: 'This GRN is referenced in inventory transactions. Please remove those references first.',
+                });
+                return;
+            }
+
+            // Check if GRN is referenced in any material purchases
+            const { data: purchaseRefs, error: purchaseError } = await supabase
+                .from('material_purchases')
+                .select('id')
+                .eq('grn_id', deletingGrn.id)
+                .limit(1);
+
+            if (purchaseError) {
+                console.log('Error checking purchase references:', purchaseError.message);
+            } else if (purchaseRefs && purchaseRefs.length > 0) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Cannot Delete GRN',
+                    description: 'This GRN is referenced in material purchases. Please remove those references first.',
+                });
+                return;
+            }
+
+            // Delete the GRN
+            const { error } = await supabase
+                .from('grn')
+                .delete()
+                .eq('id', deletingGrn.id);
+
+            if (error) {
+                // Check if it's a foreign key constraint error
+                if (error.message.includes('foreign key constraint') || error.message.includes('violates foreign key')) {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Cannot Delete GRN',
+                        description: 'This GRN is still being referenced by other records. Please remove all references before deleting.',
+                    });
+                    return;
+                }
+                throw error;
+            }
+
+            toast({
+                title: 'GRN Deleted',
+                description: `Goods Received Note "${deletingGrn.grn_id}" has been deleted successfully.`,
+            });
+
+            // Refresh the GRNs list
+            await fetchGrns();
+            
+            // Close dialog
+            setDeleteDialogOpen(false);
+            setDeletingGrn(null);
+
+        } catch (error) {
+            console.error('Error deleting GRN:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error deleting GRN',
+                description: error.message,
+            });
+        } finally {
+            setIsDeleting(false);
+        }
     };
     
     return (
@@ -220,7 +307,7 @@ const GoodsReceivedNotesPage = () => {
                                             <td className="px-6 py-4"><Badge variant={grn.status === 'Received' ? 'success' : 'secondary'}>{grn.status}</Badge></td>
                                             <td className="px-6 py-4 space-x-2">
                                                 <Button size="sm" variant="outline" onClick={() => handleEdit(grn)}><Edit className="h-4 w-4" /></Button>
-                                                <Button size="sm" variant="destructive" onClick={() => handleDelete(grn.id)}><Trash2 className="h-4 w-4" /></Button>
+                                                <Button size="sm" variant="destructive" onClick={() => handleDelete(grn)}><Trash2 className="h-4 w-4" /></Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -229,6 +316,21 @@ const GoodsReceivedNotesPage = () => {
                     </div>
                 </div>
                 <GRNForm open={openForm} setOpen={setOpenForm} grn={selectedGrn} onUpdate={fetchGrns} />
+                
+                {/* Delete Confirmation Dialog */}
+                <DeleteConfirmationDialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                    onConfirm={confirmDelete}
+                    title="Delete Goods Received Note"
+                    description="Are you sure you want to delete this Goods Received Note? This action cannot be undone."
+                    itemName={deletingGrn?.grn_id}
+                    itemType="GRN"
+                    isLoading={isDeleting}
+                    loadingText="Deleting GRN..."
+                    confirmText="Delete GRN"
+                    cancelText="Cancel"
+                />
             </motion.div>
         </>
     );

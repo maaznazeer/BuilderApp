@@ -124,14 +124,14 @@ const StrategicOverview = () => {
             ),
         },
         {
-            title: 'Gantt',
+            title: 'Payroll',
             icon: GanttChartSquare,
-            link: '/dashboard/project-management',
+            link: '/dashboard/payroll',
             color: 'text-orange-500',
             render: (d) => (
                 <div>
-                    <div className="text-2xl font-bold">{d?.gantt?.milestones_starting_soon || 0}</div>
-                    <p className="text-xs text-muted-foreground">milestones starting in 7d</p>
+                    <div className="text-2xl font-bold">{formatCurrency(d?.payroll?.total_paid || 0)}</div>
+                    <p className="text-xs text-muted-foreground">total payroll paid</p>
                 </div>
             ),
         },

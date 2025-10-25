@@ -43,8 +43,31 @@ const ProjectCostChart = () => {
             }
             
             console.log('ProjectCostChart - Projects with budget data:', projectsWithBudget);
+            console.log('ProjectCostChart - Number of projects with budget:', projectsWithBudget.length);
+            console.log('ProjectCostChart - Budget fields for each project:', projectsWithBudget.map(p => ({
+                name: p.name,
+                budget_total: p.budget_total,
+                budget_currency: p.budget_currency
+            })));
             
-            const projectData = await Promise.all(projectsWithBudget.map(async (project) => {
+            // Filter out projects with no budget data - only use budget_total
+            const projectsWithValidBudget = projectsWithBudget.filter(project => {
+                const budget = project.budget_total;
+                return budget && budget > 0;
+            });
+            
+            console.log('ProjectCostChart - Projects with valid budget (>0):', projectsWithValidBudget);
+            
+            if (projectsWithValidBudget.length === 0) {
+                console.log('No projects with valid budget data found');
+                setChartData([]);
+                setTotalBudget(0);
+                setTotalSpent(0);
+                setPieData([]);
+                return;
+            }
+            
+            const projectData = await Promise.all(projectsWithValidBudget.map(async (project) => {
                 // Fetch real budget data for each project
                 // Use project ID instead of code for financial data queries
                 console.log('Processing project:', project.name, 'Budget:', project.budget);
@@ -85,8 +108,14 @@ const ProjectCostChart = () => {
                         .from('financial_ledger')
                         .select('expense_amount, amount_to_be_received, date')
                         .eq('project_code', project.id)
-                        .eq('user_id', user.id)
                 ]);
+
+                // Check for database errors
+                if (payrollResult.error) console.error('Payroll query error:', payrollResult.error);
+                if (expensesResult.error) console.error('Expenses query error:', expensesResult.error);
+                if (materialsResult.error) console.error('Materials query error:', materialsResult.error);
+                if (tasksResult.error) console.error('Tasks query error:', tasksResult.error);
+                if (ledgerResult.error) console.error('Ledger query error:', ledgerResult.error);
 
                 // Calculate total spending using same logic as useBudgetTracking
                 let totalSpent = 0;
@@ -193,6 +222,7 @@ const ProjectCostChart = () => {
                 totalSpent: budgetData.totalSpent,
                 remaining: budgetData.remainingBudget
             })));
+            console.log('ProjectCostChart - Final chart data:', chartData);
 
             // Always use real data - no sample data fallback
             if (totalBudget === 0) {

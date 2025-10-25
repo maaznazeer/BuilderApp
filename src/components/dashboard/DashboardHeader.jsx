@@ -35,9 +35,9 @@ const DashboardHeader = ({ toggleSidebar, isSidebarCollapsed }) => {
           {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
           <span className="sr-only">Toggle sidebar</span>
         </Button>
-      <div className="flex-1">
-        <GlobalSearch />
-      </div>
+      <div className="flex-1"/>
+        {/* <GlobalSearch /> */}
+   
       <div className="flex items-center gap-2">
         <Notifications />
         <DropdownMenu>

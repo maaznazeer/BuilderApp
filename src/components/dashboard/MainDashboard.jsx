@@ -54,9 +54,9 @@ const MainDashboard = () => {
         </motion.div>
         
         {/* KPI Strip - Compact */}
-        <motion.div variants={itemVariants} className="flex-shrink-0">
+        {/* <motion.div variants={itemVariants} className="flex-shrink-0">
           <KpiStrip />
-        </motion.div>
+        </motion.div> */}
 
         {/* Financial Overview Section */}
         <motion.div variants={itemVariants} className="space-y-6">
@@ -70,6 +70,14 @@ const MainDashboard = () => {
         <motion.div variants={itemVariants} className="space-y-6">
           <ProjectCostChart />
         </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-6">
+          <FinancialTrendsChart />
+        </motion.div>
+
+        {/* <motion.div variants={itemVariants} className="space-y-6">
+          <ProjectPerformanceDashboard />
+        </motion.div> */}
     
       </motion.div>
     </div>

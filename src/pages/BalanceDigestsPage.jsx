@@ -1,7 +1,8 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { useBalanceDigests, useGenerateBalanceDigest } from '@/hooks/useBalanceDigests';
+import { useBalanceDigests, useGenerateBalanceDigest, useClearBalanceDigests } from '@/hooks/useBalanceDigests';
+import { useQueryClient } from 'react-query';
 import {
   Table,
   TableBody,
@@ -10,16 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Loader2, Plus } from 'lucide-react';
+import { DollarSign, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import DeleteConfirmationDialog from '@/components/ui/DeleteConfirmationDialog';
 import { format } from 'date-fns';
 
 const BalanceDigestsPage = () => {
-  const { data: digests, isLoading: loading } = useBalanceDigests();
+  const { data: digests, isLoading: loading, refetch } = useBalanceDigests();
   const generateDigestMutation = useGenerateBalanceDigest();
+  const clearDigestsMutation = useClearBalanceDigests();
+  const queryClient = useQueryClient();
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
-  // Debug logging
-  console.log('BalanceDigestsPage - digests:', digests);
-  console.log('BalanceDigestsPage - loading:', loading);
 
   return (
     <>
@@ -27,6 +30,22 @@ const BalanceDigestsPage = () => {
         <title>Balance Digests - DomusBuilder Hub</title>
         <meta name="description" content="View summarized financial balances for your projects." />
       </Helmet>
+      
+      {/* Loading overlay to prevent navigation during clear operation */}
+      {clearDigestsMutation.isLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-4">
+            <div className="flex items-center space-x-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <div>
+                <h3 className="text-lg font-semibold">Clearing Balance Digests</h3>
+                <p className="text-sm text-gray-600">Please stay on this page until the operation completes...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,17 +82,24 @@ const BalanceDigestsPage = () => {
                 )}
               </button>
               <button
-                onClick={() => {
-                  localStorage.removeItem('balance_digests');
-                  window.location.reload();
-                }}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-4 py-2"
+                onClick={() => setShowClearDialog(true)}
+                disabled={clearDigestsMutation.isLoading || digests?.length === 0}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
               >
-                Clear Data
+                {clearDigestsMutation.isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Clearing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" /> Clear Data
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
         </div>
+
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <Table>
@@ -117,6 +143,24 @@ const BalanceDigestsPage = () => {
             </TableBody>
           </Table>
         </div>
+
+        {/* Clear Data Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={showClearDialog}
+          onOpenChange={setShowClearDialog}
+          onConfirm={() => {
+            clearDigestsMutation.mutate();
+            setShowClearDialog(false);
+          }}
+          title="Clear All Balance Digests"
+          description="Are you sure you want to clear all balance digest data? This action cannot be undone and will remove all generated balance summaries."
+          itemName={`${digests?.length || 0} balance digest(s)`}
+          itemType="balance digests"
+          isLoading={clearDigestsMutation.isLoading}
+          loadingText="Clearing data..."
+          confirmText="Clear All Data"
+          cancelText="Cancel"
+        />
       </motion.div>
     </>
   );

@@ -9,7 +9,10 @@ export const useBudgetTracking = (projectId) => {
     const { toast } = useToast();
 
     const fetchBudgetData = useCallback(async () => {
-        if (!projectId) return;
+        if (!projectId) {
+            console.warn('useBudgetTracking - No projectId provided');
+            return;
+        }
 
         setLoading(true);
         try {

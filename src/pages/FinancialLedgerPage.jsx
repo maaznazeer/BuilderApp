@@ -135,7 +135,11 @@ const FinancialLedgerPage = () => {
                                         <AlertDescription>{error}</AlertDescription>
                                     </Alert>
                                 ) : (
-                                    <FinancialLedgerTable entries={filteredEntries} onAddEntry={() => setIsAddDialogOpen(true)} />
+                                    <FinancialLedgerTable 
+                                        entries={filteredEntries} 
+                                        onAddEntry={() => setIsAddDialogOpen(true)}
+                                        onEntryUpdated={fetchLedgerEntries}
+                                    />
                                 )}
                             </CardContent>
                         </Card>

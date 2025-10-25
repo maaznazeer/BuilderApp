@@ -1037,9 +1037,9 @@ const InventoryPage = () => {
 
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Select value={filters.category} onValueChange={(v) => setFilters(f => ({...f, category: v}))}><SelectTrigger><SelectValue placeholder={t('inventory.filter_by_category')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('inventory.all_categories')}</SelectItem>{MATERIAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-          <Select value={filters.supplier} onValueChange={(v) => setFilters(f => ({...f, supplier: v}))}><SelectTrigger><SelectValue placeholder={t('inventory.filter_by_supplier')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('inventory.all_suppliers')}</SelectItem>{suppliers.map(s => <SelectItem key={s.supplier_code} value={s.supplier_code}>{s.supplier_name}</SelectItem>)}</SelectContent></Select>
-          <Select value={filters.stock} onValueChange={(v) => setFilters(f => ({...f, stock: v}))}><SelectTrigger><SelectValue placeholder={t('inventory.filter_by_stock')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('inventory.all_stock')}</SelectItem><SelectItem value="low">{t('inventory.low_stock')}</SelectItem><SelectItem value="in_stock">{t('inventory.in_stock')}</SelectItem></SelectContent></Select>
+          <Select value={filters.category} onValueChange={(v) => setFilters(f => ({...f, category: v}))}><SelectTrigger><SelectValue placeholder={t('Filter by Category')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{MATERIAL_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+          <Select value={filters.supplier} onValueChange={(v) => setFilters(f => ({...f, supplier: v}))}><SelectTrigger><SelectValue placeholder={t('Filter by Supplier')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Suppliers')}</SelectItem>{suppliers.map(s => <SelectItem key={s.supplier_code} value={s.supplier_code}>{s.supplier_name}</SelectItem>)}</SelectContent></Select>
+          <Select value={filters.stock} onValueChange={(v) => setFilters(f => ({...f, stock: v}))}><SelectTrigger><SelectValue placeholder={t('Filter by Stock')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Stock')}</SelectItem><SelectItem value="low">{t('Low Stock')}</SelectItem><SelectItem value="in_stock">{t('In Stock')}</SelectItem></SelectContent></Select>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border">

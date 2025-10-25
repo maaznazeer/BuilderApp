@@ -32,18 +32,20 @@ import React from 'react';
                 color: 'text-emerald-500'
             },
             {
-                title: "Project Management",
-                value: kpiData.upcoming_milestones_7d,
-                icon: GanttChartSquare,
-                link: '/dashboard/project-management',
-                color: 'text-amber-500'
+                title: "Budget Overview",
+                value: kpiData.total_budget,
+                icon: BookOpen,
+                isCurrency: true,
+                link: '/dashboard/budget',
+                color: 'text-blue-500'
             },
             {
-                title: "Approvals",
-                value: kpiData.overdue_tasks,
-                icon: ClipboardCheck,
-                link: '/dashboard/approvals',
-                color: 'text-rose-500'
+                title: "Expenses",
+                value: kpiData.total_expenses,
+                icon: BookOpen,
+                isCurrency: true,
+                link: '/dashboard/expenses',
+                color: 'text-orange-500'
             }
         ];
 
